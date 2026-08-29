@@ -45,7 +45,6 @@ services:
   - type: web
     name: mart-pos-frontend
     runtime: static
-    plan: free
     rootDir: frontend
     buildCommand: node render-build.js
     staticPublishPath: public
