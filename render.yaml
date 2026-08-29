@@ -46,7 +46,6 @@ services:
     name: mart-pos-frontend
     runtime: static
     plan: free
-    region: singapore
     rootDir: frontend
     buildCommand: node render-build.js
     staticPublishPath: public
