@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="runtime-config.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Category - Mart Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<link rel="stylesheet" href="css/pages/ProductCategory.css">
+</head>
+
+<body data-page="category">
+
+<div class="sidebar" id="sidebar">
+  <div class="logo"><i class="fas fa-store"></i><span>Mart Dashboard</span></div>
+  <ul>
+    <li onclick="go('Dashboard-page.html')"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+    <li onclick="go('POS.html')"><i class="fas fa-cash-register"></i> POS</li>
+    <li onclick="go('LowStock.html')"><i class="fas fa-box"></i> Low Stock</li>
+    <li onclick="go('ReceiptHistory.html')"> <i class="fas fa-file-invoice"></i> Receipt History </li>
+    <li onclick="go('Product.html')"><i class="fas fa-boxes"></i> Products</li>
+    <li class="active"><i class="fas fa-tags"></i> Category</li>
+    <li onclick="go('Promotions.html')"><i class="fas fa-tags"></i> Promotions</li>
+    <li onclick="go('Staff.html')"><i class="fas fa-user-cog"></i> Staff</li>
+    <li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
+  </ul>
+</div>
+
+<div class="navbar">
+  <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+      <i class="fas fa-home"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+      <i class="fas fa-user"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" aria-label="Settings">
+      <i class="fas fa-cog"></i>
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <h2>Product Category</h2>
+  <div id="roleNote" class="role-note">Standard users can add categories, but only Admin can edit or delete them.</div>
+
+  <div class="topbar">
+    <div class="search">
+      <i class="fas fa-search"></i>
+      <input id="q" placeholder="Search by ID / Name..." oninput="render()">
+    </div>
+    <button class="btn" onclick="openAdd()"><i class="fas fa-plus"></i> Add Category</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="col-category-id">Category ID</th>
+        <th>Category Name</th>
+        <th>Description</th>
+        <th class="col-action">Action</th>
+      </tr>
+    </thead>
+    <tbody id="tb">
+      <tr><td colspan="4">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="title">Add Category</h3>
+      <div class="modal-close" onclick="closeModal()">&times;</div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label>Category ID</label>
+        <input id="categoryID" placeholder="C001">
+      </div>
+      <div>
+        <label>Category Name</label>
+        <input id="categoryName" placeholder="Drinks">
+      </div>
+      <div class="form-full">
+        <label>Description</label>
+        <input id="description" placeholder="All drinks...">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn gray" onclick="closeModal()">Cancel</button>
+      <button class="btn" id="saveBtn" onclick="save()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared-sidebar.js"></script>
+<script>
+function toggleSidebar(){
+  const sidebar = document.getElementById("sidebar");
+  const navbar = document.querySelector(".navbar");
+  const main = document.querySelector(".main");
+
+  if(window.innerWidth <= 768){
+    sidebar.classList.toggle("open");
+    return;
+  }
+
+  sidebar.classList.toggle("closed");
+  navbar.classList.toggle("full");
+  main.classList.toggle("full");
+}
+function go(p){ window.location.href=p; }
+function logout(){ window.location.href="login.html"; }
+
+let ALL=[];
+let EDIT=null;
+let CURRENT_USER = null;
+let IS_ADMIN = false;
+
+function getCategoryFields(){
+  return {
+    modal: document.getElementById("modal"),
+    title: document.getElementById("title"),
+    saveBtn: document.getElementById("saveBtn"),
+    categoryID: document.getElementById("categoryID"),
+    categoryName: document.getElementById("categoryName"),
+    description: document.getElementById("description")
+  };
+}
+
+function guardLoginAndRole(){
+  const raw = localStorage.getItem("martUser");
+  if(!raw){
+    window.location.href = "login.html";
+    return false;
+  }
+
+  try{
+    CURRENT_USER = JSON.parse(raw);
+  }catch{
+    localStorage.removeItem("martUser");
+    window.location.href = "login.html";
+    return false;
+  }
+
+  IS_ADMIN = String(CURRENT_USER.role || "User").toLowerCase() === "admin";
+  const roleNote = document.getElementById("roleNote");
+  if(roleNote) roleNote.style.display = IS_ADMIN ? "none" : "block";
+  return true;
+}
+
+async function load(){
+  const res = await fetch("/api/categories", { cache:"no-store" });
+  const data = await res.json();
+  ALL = data.categories || [];
+  render();
+}
+
+function render(){
+  const tb=document.getElementById("tb");
+  const q=(document.getElementById("q").value||"").toLowerCase().trim();
+
+  let list=ALL;
+  if(q){
+    list = list.filter(c =>
+      String(c.categoryID||"").toLowerCase().includes(q) ||
+      String(c.categoryName||"").toLowerCase().includes(q) ||
+      String(c.description||"").toLowerCase().includes(q)
+    );
+  }
+
+  if(list.length===0){
+    tb.innerHTML="<tr><td colspan='4'>No categories found</td></tr>";
+    return;
+  }
+
+  tb.innerHTML=list.map(c=>`
+    <tr>
+      <td>${c.categoryID||""}</td>
+      <td>${c.categoryName||""}</td>
+      <td>${c.description||""}</td>
+      <td>
+        ${IS_ADMIN ? `
+        <button class="btn small" onclick="openEdit('${c.categoryID}')"><i class="fas fa-pen"></i> Edit</button>
+        <button class="btn small red" onclick="delCat('${c.categoryID}')"><i class="fas fa-trash"></i> Delete</button>
+        ` : `<span style="color:#777;">Admin only</span>`}
+      </td>
+    </tr>
+  `).join("");
+}
+
+function openAdd(){
+  const fields = getCategoryFields();
+  EDIT=null;
+  fields.title.textContent="Add Category";
+  fields.saveBtn.textContent="Save";
+  fields.categoryID.value="";
+  fields.categoryName.value="";
+  fields.description.value="";
+  fields.categoryID.disabled=false;
+  fields.modal.classList.add("show");
+}
+
+function openEdit(id){
+  if(!IS_ADMIN){
+    alert("Only Admin can edit categories.");
+    return;
+  }
+  const c = ALL.find(x=>x.categoryID===id);
+  if(!c) return;
+
+  const fields = getCategoryFields();
+  EDIT=id;
+  fields.title.textContent="Edit Category";
+  fields.saveBtn.textContent="Update";
+  fields.categoryID.value=c.categoryID||"";
+  fields.categoryName.value=c.categoryName||"";
+  fields.description.value=c.description||"";
+  fields.categoryID.disabled=true;
+  fields.modal.classList.add("show");
+}
+
+function closeModal(){ getCategoryFields().modal.classList.remove("show"); }
+
+async function save(){
+  if(EDIT && !IS_ADMIN){
+    alert("Only Admin can update categories.");
+    return;
+  }
+  const fields = getCategoryFields();
+  const payload={
+    categoryID: fields.categoryID.value.trim(),
+    categoryName: fields.categoryName.value.trim(),
+    description: fields.description.value.trim()
+  };
+
+  if(!payload.categoryID || !payload.categoryName){
+    alert("Category ID and Name required!");
+    return;
+  }
+
+  let res;
+  if(EDIT){
+    res = await fetch(`/api/categories/${EDIT}`,{
+      method:"PUT",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+  }else{
+    res = await fetch("/api/categories",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  if(!res.ok){
+    const t = await res.text();
+    return alert("Save failed: " + t);
+  }
+
+  closeModal();
+  await load();
+}
+
+async function delCat(id){
+  if(!IS_ADMIN){
+    alert("Only Admin can delete categories.");
+    return;
+  }
+  if(!confirm("Delete this category?")) return;
+  const res = await fetch(`/api/categories/${id}`,{ method:"DELETE" });
+  if(!res.ok) return alert("Delete failed");
+  await load();
+}
+
+if(guardLoginAndRole()){
+  load();
+}
+</script>
+
+</body>
+</html>

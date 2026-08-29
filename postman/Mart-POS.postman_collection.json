@@ -1,0 +1,206 @@
+{
+  "info": {
+    "name": "Mart POS API",
+    "_postman_id": "3c2bfb0e-3a4a-4f2e-9a4d-6b2c3b2e2b10",
+    "description": "REST API collection for Mart POS Express backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"P001\",\n  \"productName\": \"Sample Product\",\n  \"categoryID\": \"C001\",\n  \"categoryName\": \"General\",\n  \"description\": \"Demo item\",\n  \"image\": \"\",\n  \"stock\": 10,\n  \"buyPrice\": 2.5,\n  \"salePrice\": 4.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          }
+        },
+        {
+          "name": "Low Stock",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/low-stock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "low-stock"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryID\": \"C001\",\n  \"categoryName\": \"General\",\n  \"description\": \"Default category\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Promotions",
+      "item": [
+        {
+          "name": "Get Promotions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/promotions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "promotions"]
+            }
+          }
+        },
+        {
+          "name": "Create Promotion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"P001\",\n  \"productName\": \"Sample Product\",\n  \"discountType\": \"percent\",\n  \"discountValue\": 10,\n  \"startDate\": \"2026-08-29\",\n  \"endDate\": \"2026-09-30\",\n  \"status\": \"Active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/promotions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "promotions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkout",
+      "item": [
+        {
+          "name": "Create Checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeNumber\": 1001,\n  \"paymentMethod\": \"Cash\",\n  \"status\": \"Completed\",\n  \"items\": [\n    {\n      \"productCode\": \"P001\",\n      \"productName\": \"Sample Product\",\n      \"quantity\": 1,\n      \"price\": 4,\n      \"subTotal\": 4\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Employees",
+      "item": [
+        {
+          "name": "Get Employees",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/employees",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "employees"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ]
+}

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="runtime-config.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Promotions - Mart Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="css/pages/Promotions.css">
+</head>
+<body data-page="promotions">
+
+<div class="sidebar" id="sidebar">
+  <div class="logo"><i class="fas fa-store"></i><span>Mart Dashboard</span></div>
+  <ul>
+    <li onclick="go('Dashboard-page.html')"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+    <li onclick="go('POS.html')"><i class="fas fa-cash-register"></i> POS</li>
+    <li onclick="go('LowStock.html')"><i class="fas fa-box"></i> Low Stock</li>
+    <li onclick="go('ReceiptHistory.html')"><i class="fas fa-file-invoice"></i> Receipt History</li>
+    <li onclick="go('Product.html')"><i class="fas fa-boxes"></i> Products</li>
+    <li onclick="go('ProductCategory.html')"><i class="fas fa-tags"></i> Category</li>
+    <li class="active"><i class="fas fa-tags"></i> Promotions</li>
+    <li onclick="go('Staff.html')"><i class="fas fa-user-cog"></i> Staff</li>
+    <li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
+  </ul>
+</div>
+
+<div class="navbar">
+  <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+      <i class="fas fa-home"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+      <i class="fas fa-user"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" aria-label="Settings">
+      <i class="fas fa-cog"></i>
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <h2>Promotions</h2>
+  <div id="roleNote" class="role-note">Only Admin can add, edit, or delete promotions.</div>
+
+  <div class="topbar">
+    <div class="search">
+      <i class="fas fa-search"></i>
+      <input id="q" placeholder="Search by Promotion ID / Product Code / Product Name..." oninput="render()">
+    </div>
+    <button class="btn" id="addPromotionBtn" onclick="openAdd()"><i class="fas fa-plus"></i> Add Promotion</button>
+  </div>
+
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th class="col-promotion-id">Promotion ID</th>
+        <th class="col-product-code">Product Code</th>
+        <th>Product Name</th>
+        <th class="col-type">Type</th>
+        <th class="col-value">Value</th>
+        <th class="col-date">Start Date</th>
+        <th class="col-date">End Date</th>
+        <th class="col-status">Status</th>
+        <th class="col-action">Action</th>
+      </tr>
+    </thead>
+    <tbody id="tb">
+      <tr><td colspan="9">Loading...</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">Collection: <b>Mart_promotions</b></div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="title">Add Promotion</h3>
+      <div class="modal-close" onclick="closeModal()">&times;</div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label>Promotion ID</label>
+        <input id="promotionID" placeholder="Auto Number">
+      </div>
+
+      <div>
+        <label>Product Code</label>
+        <input id="productCode" placeholder="P001">
+      </div>
+
+      <div class="full">
+        <label>Product Name</label>
+        <input id="productName" placeholder="Vita">
+      </div>
+
+      <div>
+        <label>Discount Type</label>
+        <select id="discountType" aria-label="Discount type">
+          <option value="percent">percent</option>
+          <option value="amount">amount</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Discount Value</label>
+        <input id="discountValue" type="number" step="0.01" placeholder="10">
+      </div>
+
+      <div>
+        <label>Start Date</label>
+        <input id="startDate" type="date">
+      </div>
+
+      <div>
+        <label>End Date</label>
+        <input id="endDate" type="date">
+      </div>
+
+      <div class="full">
+        <label>Status</label>
+        <select id="status" aria-label="Promotion status">
+          <option value="Active">Active</option>
+          <option value="Expired">Expired</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn gray" onclick="closeModal()">Cancel</button>
+      <button class="btn" id="saveBtn" onclick="save()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared-sidebar.js"></script>
+<script>
+function toggleSidebar(){
+  const sidebar = document.getElementById("sidebar");
+  const navbar = document.querySelector(".navbar");
+  const main = document.querySelector(".main");
+
+  if(window.innerWidth <= 768){
+    sidebar.classList.toggle("open");
+    return;
+  }
+
+  sidebar.classList.toggle("closed");
+  navbar.classList.toggle("full");
+  main.classList.toggle("full");
+}
+function go(p){ window.location.href=p; }
+function logout(){
+  localStorage.removeItem("martUser");
+  window.location.href="login.html";
+}
+
+let ALL = [];
+let ALL_PRODUCTS = [];
+let EDIT = null;
+let CURRENT_USER = null;
+let IS_ADMIN = false;
+
+function getPromotionFields(){
+  return {
+    promotionID: document.getElementById("promotionID"),
+    productCode: document.getElementById("productCode"),
+    productName: document.getElementById("productName"),
+    discountType: document.getElementById("discountType"),
+    discountValue: document.getElementById("discountValue"),
+    startDate: document.getElementById("startDate"),
+    endDate: document.getElementById("endDate"),
+    status: document.getElementById("status"),
+    title: document.getElementById("title"),
+    saveBtn: document.getElementById("saveBtn"),
+    modal: document.getElementById("modal")
+  };
+}
+
+function guardLoginAndRole(){
+  const raw = localStorage.getItem("martUser");
+  if(!raw){
+    window.location.href = "login.html";
+    return false;
+  }
+
+  try{
+    CURRENT_USER = JSON.parse(raw);
+  }catch{
+    localStorage.removeItem("martUser");
+    window.location.href = "login.html";
+    return false;
+  }
+
+  IS_ADMIN = String(CURRENT_USER.role || "User").toLowerCase() === "admin";
+  const roleNote = document.getElementById("roleNote");
+  const addPromotionBtn = document.getElementById("addPromotionBtn");
+  if(roleNote) roleNote.style.display = IS_ADMIN ? "none" : "block";
+  if(addPromotionBtn) addPromotionBtn.style.display = IS_ADMIN ? "" : "none";
+  return true;
+}
+
+async function load(){
+  try{
+    const res = await fetch("/api/promotions", { cache:"no-store" });
+    if(!res.ok){
+      const t = await res.text();
+      document.getElementById("tb").innerHTML = `<tr><td colspan="9">API Error: ${t}</td></tr>`;
+      return;
+    }
+
+    const data = await res.json();
+    ALL = data.promotions || [];
+    render();
+  }catch(err){
+    document.getElementById("tb").innerHTML = "<tr><td colspan='9'>Error loading promotions</td></tr>";
+    console.error(err);
+  }
+}
+
+async function loadProducts(){
+  try{
+    const res = await fetch("/api/products", { cache:"no-store" });
+    if(!res.ok){
+      return;
+    }
+
+    const data = await res.json();
+    ALL_PRODUCTS = Array.isArray(data.products) ? data.products : [];
+    syncProductNameFromCode();
+  }catch(err){
+    console.error("Error loading products", err);
+  }
+}
+
+async function loadNextPromotionID(){
+  try{
+    const res = await fetch("/api/promotions/next-id", { cache:"no-store" });
+    if(!res.ok){
+      return;
+    }
+
+    const data = await res.json();
+    getPromotionFields().promotionID.value = data.promotionID || "";
+  }catch(err){
+    console.error("Error loading next promotion ID", err);
+  }
+}
+
+function getNextPromotionIDFromList(){
+  const maxNumber = ALL.reduce((max, promotion) => {
+    const match = String(promotion.promotionID || "").trim().match(/^PR(\d+)$/i);
+    if(!match) return max;
+    return Math.max(max, Number(match[1]));
+  }, 0);
+
+  return `PR${String(maxNumber + 1).padStart(3, "0")}`;
+}
+
+function syncProductNameFromCode(){
+  const fields = getPromotionFields();
+  const code = String(fields.productCode.value || "").trim().toLowerCase();
+
+  if(!code){
+    fields.productName.value = "";
+    return;
+  }
+
+  const match = ALL_PRODUCTS.find(p =>
+    String(p.productCode || "").trim().toLowerCase() === code
+  );
+
+  fields.productName.value = match ? String(match.productName || "") : "";
+}
+
+function render(){
+  const tb = document.getElementById("tb");
+  const q = (document.getElementById("q").value || "").toLowerCase().trim();
+
+  let list = ALL;
+  if(q){
+    list = list.filter(p =>
+      String(p.promotionID || "").toLowerCase().includes(q) ||
+      String(p.productCode || "").toLowerCase().includes(q) ||
+      String(p.productName || "").toLowerCase().includes(q)
+    );
+  }
+
+  if(list.length === 0){
+    tb.innerHTML = "<tr><td colspan='9'>No promotions found</td></tr>";
+    return;
+  }
+
+  tb.innerHTML = list.map(p => `
+    <tr>
+      <td>${p.promotionID || ""}</td>
+      <td>${p.productCode || ""}</td>
+      <td>${p.productName || ""}</td>
+      <td>${p.discountType || ""}</td>
+      <td>${p.discountType === "percent" ? Number(p.discountValue || 0) + "%" : "$" + Number(p.discountValue || 0)}</td>
+      <td>${p.startDate || ""}</td>
+      <td>${p.endDate || ""}</td>
+      <td>
+        <span class="badge ${String(p.status || "").toLowerCase() === "active" ? "active-badge" : "expired-badge"}">
+          ${p.status || ""}
+        </span>
+      </td>
+      <td>
+        ${IS_ADMIN ? `
+        <button class="btn small" onclick="openEdit('${String(p.promotionID).replace(/'/g, "\\'")}')"><i class="fas fa-pen"></i> Edit</button>
+        <button class="btn small red" onclick="delPromo('${String(p.promotionID).replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i> Delete</button>
+        ` : `<span style="color:#777;">Admin only</span>`}
+      </td>
+    </tr>
+  `).join("");
+}
+
+function openAdd(){
+  if(!IS_ADMIN){
+    alert("Only Admin can add promotions.");
+    return;
+  }
+  EDIT = null;
+  const fields = getPromotionFields();
+  fields.title.textContent = "Add Promotion";
+  fields.saveBtn.textContent = "Save";
+
+  fields.promotionID.value = "";
+  fields.productCode.value = "";
+  fields.productName.value = "";
+  fields.discountType.value = "percent";
+  fields.discountValue.value = "";
+  fields.startDate.value = "";
+  fields.endDate.value = "";
+  fields.status.value = "Active";
+
+  fields.promotionID.value = getNextPromotionIDFromList();
+  fields.promotionID.disabled = false;
+  fields.modal.classList.add("show");
+  loadNextPromotionID();
+  fields.productCode.focus();
+}
+
+function openEdit(id){
+  if(!IS_ADMIN){
+    alert("Only Admin can edit promotions.");
+    return;
+  }
+  const p = ALL.find(x => x.promotionID === id);
+  if(!p) return;
+
+  EDIT = id;
+  const fields = getPromotionFields();
+  fields.title.textContent = "Edit Promotion";
+  fields.saveBtn.textContent = "Update";
+
+  fields.promotionID.value = p.promotionID || "";
+  fields.productCode.value = p.productCode || "";
+  fields.productName.value = p.productName || "";
+  fields.discountType.value = p.discountType || "percent";
+  fields.discountValue.value = p.discountValue ?? "";
+  fields.startDate.value = p.startDate || "";
+  fields.endDate.value = p.endDate || "";
+  fields.status.value = p.status || "Active";
+
+  fields.promotionID.disabled = true;
+  fields.modal.classList.add("show");
+  syncProductNameFromCode();
+}
+
+function closeModal(){
+  getPromotionFields().modal.classList.remove("show");
+}
+
+async function save(){
+  if(!IS_ADMIN){
+    alert(EDIT ? "Only Admin can update promotions." : "Only Admin can add promotions.");
+    return;
+  }
+  const fields = getPromotionFields();
+  const payload = {
+    promotionID: fields.promotionID.value.trim(),
+    productCode: fields.productCode.value.trim(),
+    productName: fields.productName.value.trim(),
+    discountType: fields.discountType.value,
+    discountValue: Number(fields.discountValue.value || 0),
+    startDate: fields.startDate.value,
+    endDate: fields.endDate.value,
+    status: fields.status.value
+  };
+
+  if(!payload.promotionID || !payload.productCode || !payload.productName){
+    alert("Promotion ID, Product Code, and Product Name are required");
+    return;
+  }
+
+  try{
+    let res;
+
+    if(EDIT){
+      res = await fetch(`/api/promotions/${encodeURIComponent(EDIT)}`, {
+        method:"PUT",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+    }else{
+      res = await fetch("/api/promotions", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    if(!res.ok){
+      const t = await res.text();
+      alert("Save failed: " + t);
+      return;
+    }
+
+    closeModal();
+    load();
+  }catch(err){
+    console.error(err);
+    alert("Error saving promotion");
+  }
+}
+
+async function delPromo(id){
+  if(!IS_ADMIN){
+    alert("Only Admin can delete promotions.");
+    return;
+  }
+  if(!confirm("Delete this promotion?")) return;
+
+  try{
+    const res = await fetch(`/api/promotions/${encodeURIComponent(id)}`, {
+      method:"DELETE"
+    });
+
+    if(!res.ok){
+      const t = await res.text();
+      alert("Delete failed: " + t);
+      return;
+    }
+
+    load();
+  }catch(err){
+    console.error(err);
+    alert("Error deleting promotion");
+  }
+}
+
+if(guardLoginAndRole()){
+  const fields = getPromotionFields();
+  fields.productCode.addEventListener("input", syncProductNameFromCode);
+  fields.productCode.addEventListener("change", syncProductNameFromCode);
+  loadProducts();
+  load();
+}
+</script>
+
+</body>
+</html>

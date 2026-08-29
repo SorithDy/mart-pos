@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="runtime-config.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Details</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<link rel="stylesheet" href="css/pages/SalesDetails.css">
+</head>
+
+<body data-page="receipt-history">
+
+<div class="sidebar" id="sidebar">
+<div class="logo">
+<i class="fas fa-store"></i> Mart Dashboard
+</div>
+
+<ul>
+<li onclick="go('Dashboard-page.html')"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+<li onclick="go('POS.html')"><i class="fas fa-cash-register"></i> POS</li>
+<li onclick="go('LowStock.html')"><i class="fas fa-box"></i> Low Stock</li>
+<li onclick="go('ReceiptHistory.html')"> <i class="fas fa-file-invoice"></i> Receipt History </li>
+<li onclick="go('Product.html')"><i class="fas fa-boxes"></i> Products</li>
+<li onclick="go('ProductCategory.html')"><i class="fas fa-tags"></i> Category</li>
+<li onclick="go('Promotions.html')"><i class="fas fa-tags"></i> Promotions</li>
+<li onclick="go('Staff.html')"><i class="fas fa-user-cog"></i> Staff</li>
+<li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
+</ul>
+</div>
+
+<div class="navbar" id="navbar">
+<button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+<i class="fas fa-bars"></i>
+</button>
+<div class="nav-actions">
+<button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+<i class="fas fa-home"></i>
+</button>
+<button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+<i class="fas fa-user"></i>
+</button>
+<button class="nav-icon-btn" type="button" aria-label="Settings">
+<i class="fas fa-cog"></i>
+</button>
+</div>
+</div>
+
+<div class="main" id="main">
+
+<h2>Sales Details</h2>
+<br>
+<div class="search">
+<i class="fas fa-search"></i>
+<input id="search" placeholder="Search invoice / staff..." oninput="renderSales()">
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Invoice</th>
+<th>Date</th>
+<th>Staff</th>
+<th>Status</th>
+<th>Total</th>
+</tr>
+</thead>
+
+<tbody id="salesTable">
+<tr>
+<td colspan="5">Loading...</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<script src="shared-sidebar.js"></script>
+<script>
+function toggleSidebar(){
+const sidebar=document.getElementById("sidebar");
+const navbar=document.getElementById("navbar");
+const main=document.getElementById("main");
+
+if(window.innerWidth<=768){
+sidebar.classList.toggle("open");
+return;
+}
+
+sidebar.classList.toggle("closed");
+navbar.classList.toggle("full");
+main.classList.toggle("full");
+}
+
+function go(page){
+window.location.href = page;
+}
+
+function logout(){
+window.location.href = "login.html";
+}
+
+let SALES=[];
+
+function formatDate(d){
+const date=new Date(d);
+return date.toLocaleDateString();
+}
+
+function statusBadge(status){
+const s=(status||"Completed").toLowerCase();
+
+if(s==="pending") return '<span class="status pending">Pending</span>';
+if(s==="cancelled") return '<span class="status cancelled">Cancelled</span>';
+
+return '<span class="status completed">Completed</span>';
+}
+
+async function loadSales(){
+
+const res=await fetch("/api/sales");
+const data=await res.json();
+
+SALES=data.sales || [];
+
+renderSales();
+
+}
+
+function renderSales(){
+
+const q=document.getElementById("search").value.toLowerCase();
+
+const table=document.getElementById("salesTable");
+
+const filtered=SALES.filter(s=>
+
+String(s.invoiceNo).toLowerCase().includes(q) ||
+String(s.staffName).toLowerCase().includes(q)
+
+);
+
+if(filtered.length===0){
+
+table.innerHTML="<tr><td colspan='5'>No sales found</td></tr>";
+return;
+
+}
+
+table.innerHTML=filtered.map(s=>`
+
+<tr>
+
+<td>${s.invoiceNo}</td>
+
+<td>${formatDate(s.saleDate)}</td>
+
+<td>${s.staffName}</td>
+
+<td>${statusBadge(s.status)}</td>
+
+<td>$${s.totalAmount}</td>
+
+</tr>
+
+`).join("");
+
+}
+
+loadSales();
+
+</script>
+
+</body>
+</html>

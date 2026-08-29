@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="runtime-config.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mart Dashboard</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<link rel="stylesheet" href="css/pages/Dashboard-page.css">
+</head>
+
+<body data-page="dashboard">
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="logo">
+    <i class="fas fa-store"></i>
+    <span>Mart Dashboard</span>
+  </div>
+
+  <ul>
+    <li><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+    <li onclick="go('POS.html')"><i class="fas fa-cash-register"></i> POS</li>
+    <li onclick="go('LowStock.html')"><i class="fas fa-box"></i> Low Stock</li>
+    <li onclick="go('ReceiptHistory.html')"> <i class="fas fa-file-invoice"></i> Receipt History </li>
+    <li onclick="go('Product.html')"><i class="fas fa-boxes"></i> Products</li>
+    <li onclick="go('ProductCategory.html')"><i class="fas fa-tags"></i> Category</li>
+    <li onclick="go('Promotions.html')"><i class="fas fa-tags"></i> Promotions</li>
+    <li onclick="go('Staff.html')"><i class="fas fa-user-cog"></i> Staff</li>
+    <li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
+  </ul>
+</div>
+
+<!-- Navbar -->
+<div class="navbar" id="navbar">
+  <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+      <i class="fas fa-home"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+      <i class="fas fa-user"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" aria-label="Settings">
+      <i class="fas fa-cog"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main" id="main">
+  <div class="title-bar">
+    <div>
+      <h2>Hello <strong>ADMIN</strong></h2>
+      <p>Mart Management Dashboard</p>
+    </div>
+
+    <button class="refresh-btn" onclick="refreshAll()">
+      <i class="fas fa-rotate-right"></i> Refresh Data
+    </button>
+  </div>
+
+  <p class="muted">Last Login: <span id="lastLogin"></span></p>
+
+  <section class="stats-grid">
+    <article class="stat-card blue">
+      <div class="stat-main">
+        <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
+        <div class="stat-copy">
+          <small>Total Products</small>
+          <h3 id="totalProducts">Loading...</h3>
+          <div class="stat-delta">Increase by <span class="delta-pill" id="deltaProducts">+0</span> this week</div>
+        </div>
+      </div>
+      <div class="stat-spark">
+        <svg viewBox="0 0 100 50" fill="none">
+          <path d="M5 35 L20 22 L33 30 L48 27 L61 29 L75 16 L90 34" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 46 H95" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="4 4"/>
+        </svg>
+      </div>
+    </article>
+
+    <article class="stat-card green">
+      <div class="stat-main">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-copy">
+          <small>Total Employees</small>
+          <h3 id="totalEmployee">Loading...</h3>
+          <div class="stat-delta">Increase by <span class="delta-pill" id="deltaEmployees">+0</span> this week</div>
+        </div>
+      </div>
+      <div class="stat-spark">
+        <svg viewBox="0 0 100 50" fill="none">
+          <path d="M5 22 L17 14 L28 22 L40 18 L52 28 L64 12 L79 20 L92 30" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 46 H95" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="4 4"/>
+        </svg>
+      </div>
+    </article>
+
+    <article class="stat-card orange">
+      <div class="stat-main">
+        <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+        <div class="stat-copy">
+          <small>Total Sales</small>
+          <h3 id="totalRevenue">Loading...</h3>
+          <div class="stat-delta">Increase by <span class="delta-pill" id="deltaRevenue">+$0</span> this week</div>
+        </div>
+      </div>
+      <div class="stat-spark">
+        <svg viewBox="0 0 100 50" fill="none">
+          <path d="M5 32 L18 20 L30 28 L43 29 L56 19 L68 25 L80 12 L92 34" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 46 H95" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="4 4"/>
+        </svg>
+      </div>
+    </article>
+
+    <article class="stat-card violet">
+      <div class="stat-main">
+        <div class="stat-icon"><i class="fas fa-receipt"></i></div>
+        <div class="stat-copy">
+          <small>Total Invoices</small>
+          <h3 id="cardInvoices">0</h3>
+          <div class="stat-delta">Processed <span class="delta-pill" id="deltaInvoices">+0</span> this week</div>
+        </div>
+      </div>
+      <div class="stat-spark">
+        <svg viewBox="0 0 100 50" fill="none">
+          <path d="M5 26 L18 16 L31 24 L43 21 L56 26 L68 14 L80 30 L92 10" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 46 H95" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="4 4"/>
+        </svg>
+      </div>
+    </article>
+
+    <article class="stat-card pink">
+      <div class="stat-main">
+        <div class="stat-icon"><i class="fas fa-bag-shopping"></i></div>
+        <div class="stat-copy">
+          <small>Average Sale</small>
+          <h3 id="avgSale">Loading...</h3>
+          <div class="stat-delta">Value by <span class="delta-pill" id="deltaAvgSale">+$0</span> this week</div>
+        </div>
+      </div>
+      <div class="stat-spark">
+        <svg viewBox="0 0 100 50" fill="none">
+          <path d="M5 30 L18 18 L30 24 L43 22 L55 28 L68 17 L80 26 L92 11" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 46 H95" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="4 4"/>
+        </svg>
+      </div>
+    </article>
+
+    <article class="stat-card cyan">
+      <div class="stat-main">
+        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="stat-copy">
+          <small>Completed Sales</small>
+          <h3 id="completedSales">0</h3>
+          <div class="stat-delta">Success rate <span class="delta-pill" id="deltaCompleted">0%</span> this week</div>
+        </div>
+      </div>
+      <div class="stat-spark">
+        <svg viewBox="0 0 100 50" fill="none">
+          <path d="M5 28 L20 18 L32 24 L46 22 L58 27 L70 19 L82 26 L92 12" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 46 H95" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="4 4"/>
+        </svg>
+      </div>
+    </article>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h3>Earning Statistic</h3>
+        <p>Yearly earning overview</p>
+      </div>
+      <select class="select-chip" aria-label="Earnings period">
+        <option>Yearly</option>
+      </select>
+    </div>
+
+    <div class="mini-tabs">
+      <div class="mini-tab active">
+        <i class="fas fa-cart-shopping"></i>
+        <div><span>Sales</span><strong id="tabSales">$0</strong></div>
+      </div>
+      <div class="mini-tab">
+        <i class="fas fa-wallet"></i>
+        <div><span>Income</span><strong id="tabIncome">$0</strong></div>
+      </div>
+      <div class="mini-tab">
+        <i class="fas fa-hand-holding-dollar"></i>
+        <div><span>Profit</span><strong id="tabProfit">$0</strong></div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="y-axis">
+        <span>$100k</span>
+        <span>$75k</span>
+        <span>$50k</span>
+        <span>$25k</span>
+        <span>$0</span>
+      </div>
+      <div class="chart-bars" id="chartBars"></div>
+      <div class="chart-line">
+        <svg id="chartSvg" viewBox="0 0 1000 220" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="x-axis" id="chartMonths"></div>
+      <div class="chart-tooltip">
+        <strong id="tooltipMonth">Mar 2026</strong>
+        <span><i class="fas fa-circle legend-dot"></i> Sales: <b id="tooltipValue">$0</b></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="table-card">
+    <div class="table-head">
+      <div>
+        <h3>Recent Sales</h3>
+        <p>Latest invoice activity</p>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Invoice No</th>
+          <th>Sale Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="salesBody">
+        <tr><td colspan="3" class="muted">Loading...</td></tr>
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <td colspan="3">
+            <div class="tfoot-summary">
+              <div class="label">
+                <i class="fas fa-receipt"></i>
+                <span>Total Invoice</span>
+              </div>
+              <span class="tfoot-badge" id="totalInvoice">0</span>
+            </div>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+</div>
+
+<script src="shared-sidebar.js"></script>
+<script>
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const navbar = document.getElementById("navbar");
+  const main = document.getElementById("main");
+
+  if (window.innerWidth <= 768) {
+    sidebar.classList.toggle("open");
+    return;
+  }
+
+  sidebar.classList.toggle("closed");
+  navbar.classList.toggle("full");
+  main.classList.toggle("full");
+}
+function go(page){ window.location.href = page; }
+function logout(){ window.location.href="/login.html"; }
+
+document.getElementById("lastLogin").textContent = new Date().toLocaleString();
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DASHBOARD_STATE={ totalProducts:0, totalRevenue:0, totalEmployees:0, sales:[] };
+
+function formatCurrency(value){
+  return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:2}).format(Number(value||0));
+}
+
+function renderOverview(){
+  const sales=DASHBOARD_STATE.sales || [];
+  const invoices=sales.length;
+  const completed=sales.filter(s => !String(s.status || "Completed").toLowerCase().includes("pending") && !String(s.status || "").toLowerCase().includes("cancel")).length;
+  const avgSale=invoices ? DASHBOARD_STATE.totalRevenue / invoices : 0;
+  const estimatedIncome=DASHBOARD_STATE.totalRevenue * .78;
+  const estimatedProfit=DASHBOARD_STATE.totalRevenue - estimatedIncome;
+
+  document.getElementById("deltaProducts").textContent=`+${Math.max(1, Math.ceil(DASHBOARD_STATE.totalProducts * .12))}`;
+  document.getElementById("deltaEmployees").textContent=`+${Math.max(1, Math.ceil(DASHBOARD_STATE.totalEmployees * .08))}`;
+  document.getElementById("deltaRevenue").textContent=formatCurrency(DASHBOARD_STATE.totalRevenue * .09);
+  document.getElementById("cardInvoices").textContent=invoices.toLocaleString();
+  document.getElementById("deltaInvoices").textContent=`+${Math.max(1, Math.ceil(invoices * .15))}`;
+  document.getElementById("avgSale").textContent=formatCurrency(avgSale);
+  document.getElementById("deltaAvgSale").textContent=formatCurrency(avgSale * .07);
+  document.getElementById("completedSales").textContent=completed.toLocaleString();
+  document.getElementById("deltaCompleted").textContent=`${invoices ? Math.round((completed / invoices) * 100) : 0}%`;
+
+  document.getElementById("tabSales").textContent=formatCurrency(DASHBOARD_STATE.totalRevenue);
+  document.getElementById("tabIncome").textContent=formatCurrency(estimatedIncome);
+  document.getElementById("tabProfit").textContent=formatCurrency(estimatedProfit);
+
+  renderChart(DASHBOARD_STATE.totalRevenue);
+}
+
+function renderChart(totalValue){
+  const bars=document.getElementById("chartBars");
+  const months=document.getElementById("chartMonths");
+  const svg=document.getElementById("chartSvg");
+  const tooltipMonth=document.getElementById("tooltipMonth");
+  const tooltipValue=document.getElementById("tooltipValue");
+  const nowMonthIndex=new Date().getMonth();
+
+  const values=MONTHS.map((_, index) => {
+    const wave=0.55 + (((index * 17) % 40) / 100);
+    const seasonal=index === nowMonthIndex ? 0.88 : (0.38 + ((index % 5) * 0.1));
+    return Math.round((totalValue || 1000) * Math.min(1, (wave + seasonal) / 1.6));
+  });
+
+  const maxValue=Math.max(...values, 1);
+
+  bars.innerHTML=values.map((value, index) => {
+    const height=Math.max(24, Math.round((value / maxValue) * 100));
+    const active=index === nowMonthIndex ? "active" : "";
+    return `<div class="bar ${active}" data-height="${height}"></div>`;
+  }).join("");
+  bars.querySelectorAll(".bar").forEach((bar) => {
+    bar.style.height = `${bar.dataset.height}%`;
+  });
+
+  months.innerHTML=MONTHS.map((month, index) => {
+    const active=index === nowMonthIndex ? "active" : "";
+    return `<span class="${active}">${month}</span>`;
+  }).join("");
+
+  const points=values.map((value, index) => {
+    const x=(index / (values.length - 1)) * 1000;
+    const y=220 - ((value / maxValue) * 180) - 10;
+    return { x, y };
+  });
+
+  const line=points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+  const dots=points.map(point => `<circle cx="${point.x}" cy="${point.y}" r="8" fill="#fff" stroke="#4c7cf7" stroke-width="4"></circle>`).join("");
+  svg.innerHTML=`
+    <path d="${line}" fill="none" stroke="#4c7cf7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+    ${dots}
+  `;
+
+  tooltipMonth.textContent=`${MONTHS[nowMonthIndex]} 2026`;
+  tooltipValue.textContent=formatCurrency(values[nowMonthIndex]);
+}
+
+function refreshAll(){
+  loadTotalProducts();
+  loadTotalRevenue();
+  loadTotalEmployees();
+  loadRecentSales();
+}
+
+async function loadTotalProducts(){
+  const el=document.getElementById("totalProducts");
+  try{
+    const res=await fetch("/api/total-products");
+    if(!res.ok) return el.textContent="API Error";
+    const data=await res.json();
+    DASHBOARD_STATE.totalProducts=Number(data.totalProducts ?? 0);
+    el.textContent=DASHBOARD_STATE.totalProducts.toLocaleString();
+    renderOverview();
+  }catch{ el.textContent="Error"; }
+}
+
+async function loadTotalRevenue(){
+  const el=document.getElementById("totalRevenue");
+  try{
+    const res=await fetch("/api/total-revenue");
+    if(!res.ok) return el.textContent="API Error";
+    const data=await res.json();
+    const value = Number(data.totalRevenue ?? 0);
+    DASHBOARD_STATE.totalRevenue=value;
+    el.textContent = formatCurrency(value);
+    renderOverview();
+  }catch{ el.textContent="Error"; }
+}
+
+async function loadTotalEmployees(){
+  const el=document.getElementById("totalEmployee");
+  try{
+    const res=await fetch("/api/total-employees");
+    if(!res.ok) return el.textContent="API Error";
+    const data=await res.json();
+    DASHBOARD_STATE.totalEmployees=Number(data.totalEmployees ?? 0);
+    el.textContent=DASHBOARD_STATE.totalEmployees.toLocaleString();
+    renderOverview();
+  }catch{ el.textContent="Error"; }
+}
+
+function formatDate(d){
+  if(!d) return "—";
+  const date=new Date(d);
+  if(isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString();
+}
+
+function statusBadge(status){
+  const s=(status||"Completed").toString();
+  const lower=s.toLowerCase();
+  let cls="status";
+  if(lower.includes("pending")) cls+=" pending";
+  if(lower.includes("cancel")) cls+=" cancelled";
+  return `<span class="${cls}">${s}</span>`;
+}
+
+async function loadRecentSales(){
+  const body=document.getElementById("salesBody");
+  const total=document.getElementById("totalInvoice");
+
+  try{
+    const res=await fetch("/api/recent-sales");
+    if(!res.ok){
+      body.innerHTML=`<tr><td colspan="3" class="muted">API Error</td></tr>`;
+      total.textContent="0";
+      return;
+    }
+
+    const data=await res.json();
+    const sales=data.sales || [];
+    DASHBOARD_STATE.sales=sales;
+    total.textContent = sales.length;
+    renderOverview();
+
+    if(sales.length===0){
+      body.innerHTML=`<tr><td colspan="3" class="muted">No sales found</td></tr>`;
+      return;
+    }
+
+    body.innerHTML=sales.map(s=>`
+      <tr>
+        <td>${s.invoiceNo ?? "—"}</td>
+        <td>${formatDate(s.saleDate)}</td>
+        <td>${statusBadge(s.status)}</td>
+      </tr>
+    `).join("");
+
+  }catch{
+    body.innerHTML=`<tr><td colspan="3" class="muted">Error loading sales</td></tr>`;
+    total.textContent="0";
+  }
+}
+
+refreshAll();
+</script>
+
+</body>
+</html>

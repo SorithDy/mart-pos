@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="runtime-config.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receipt History - Mart Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<link rel="stylesheet" href="css/pages/ReceiptHistory.css">
+</head>
+<body data-page="receipt-history">
+
+<div class="sidebar" id="sidebar">
+</div>
+
+<div class="navbar" id="navbar">
+  <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+      <i class="fas fa-home"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+      <i class="fas fa-user"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" aria-label="Settings">
+      <i class="fas fa-cog"></i>
+    </button>
+  </div>
+</div>
+
+<div class="main" id="main">
+  <h2>Receipt History</h2>
+
+  <div id="adminNote" class="admin-note">Only Admin can delete or clear receipt history.</div>
+
+  <div class="toolbar">
+    <div class="search">
+      <i class="fas fa-search"></i>
+      <input id="search" placeholder="Search invoice / staff..." oninput="renderSales()">
+    </div>
+    <button class="btn red hidden" id="clearHistoryBtn" onclick="clearHistory()">
+      <i class="fas fa-trash"></i> Clear History
+    </button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Invoice</th>
+        <th>Date</th>
+        <th>Staff</th>
+        <th>Payment Method</th>
+        <th>Status</th>
+        <th>Total</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="salesTable">
+      <tr><td colspan="7">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-wrap">
+    <div class="modal-tools">
+      <h4>Receipt Action</h4>
+      <button class="btn" onclick="printReceipt()"><i class="fas fa-print"></i> Print</button>
+      <button class="btn gray" onclick="closeModal()"><i class="fas fa-times"></i> Close</button>
+      <div class="small-muted receipt-note">
+        One invoice can contain many products.
+      </div>
+    </div>
+
+    <div class="receipt-paper" id="receiptPaper">
+      <div class="receipt-inner">
+        <div class="receipt-title">CASH RECEIPT</div>
+
+        <div class="hr"></div>
+
+        <div class="meta">
+          <div class="meta-row">
+            <div class="left">
+              <div><strong>Shop Name:</strong></div>
+              <div>Mart Store</div>
+            </div>
+            <div class="right text-right">
+              <div><strong>Shop Address</strong></div>
+              <div>Phnom Penh</div>
+            </div>
+          </div>
+
+          <div class="meta-row">
+            <div class="left">
+              <div><strong>Date:</strong></div>
+              <div id="receiptDate">--/--/----</div>
+            </div>
+            <div class="right text-right">
+              <div><strong>Invoice</strong></div>
+              <div id="receiptInvoice">#00000</div>
+            </div>
+          </div>
+
+          <div class="meta-row">
+            <div class="left">
+              <div><strong>Manager:</strong></div>
+              <div id="receiptStaff">-</div>
+            </div>
+            <div class="right text-right">
+              <div><strong>Payment</strong></div>
+              <div id="receiptPaymentMethod">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="items-head">
+          <div class="item-desc">Description</div>
+          <div class="item-price">Price</div>
+        </div>
+
+        <div class="item-list" id="receiptItems">
+          <div class="item-row">
+            <div class="item-desc">Loading...</div>
+            <div class="item-price">$0.00</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="tax-row">
+          <div>Tax</div>
+          <div id="receiptTax">$0.00</div>
+        </div>
+
+        <div class="total-row">
+          <div>Total</div>
+          <div id="receiptTotal">$0.00</div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="receipt-footer">
+          <div class="thanks">THANK YOU!</div>
+          <div class="barcode"></div>
+          <div class="barcode-text" id="barcodeText">#000000000000000#</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="shared-sidebar.js"></script>
+<script>
+function go(page) {
+  window.location.href = page;
+}
+
+function logout() {
+  window.location.href = "login.html";
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const navbar = document.getElementById("navbar");
+  const main = document.getElementById("main");
+
+  if (window.innerWidth <= 768) {
+    sidebar.classList.toggle("open");
+    return;
+  }
+
+  sidebar.classList.toggle("closed");
+  navbar.classList.toggle("full");
+  main.classList.toggle("full");
+}
+
+let SALES = [];
+let CURRENT_RECEIPT = null;
+let CURRENT_USER = null;
+let IS_ADMIN = false;
+
+function formatDate(d) {
+  if (!d) return "—";
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString();
+}
+
+function statusBadge(status) {
+  const s = (status || "Completed").toLowerCase();
+  if (s === "pending") return '<span class="status pending">Pending</span>';
+  if (s === "cancelled") return '<span class="status cancelled">Cancelled</span>';
+  return '<span class="status completed">Completed</span>';
+}
+
+function money(v) {
+  return "$" + Number(v || 0).toFixed(2);
+}
+function guardLoginAndRole(){
+  const raw = localStorage.getItem("martUser");
+  if(!raw){
+    window.location.href = "login.html";
+    return false;
+  }
+
+  try{
+    CURRENT_USER = JSON.parse(raw);
+  }catch{
+    localStorage.removeItem("martUser");
+    window.location.href = "login.html";
+    return false;
+  }
+
+  IS_ADMIN = String(CURRENT_USER.role || "User").toLowerCase() === "admin";
+  document.getElementById("clearHistoryBtn").style.display = IS_ADMIN ? "" : "none";
+  document.getElementById("adminNote").style.display = IS_ADMIN ? "none" : "block";
+  return true;
+}
+
+async function loadSales() {
+  try {
+    const res = await fetch("/api/sales");
+    if (!res.ok) throw new Error("Failed to fetch sales");
+
+    const data = await res.json();
+    SALES = Array.isArray(data.sales) ? data.sales : [];
+    renderSales();
+  } catch (err) {
+    document.getElementById("salesTable").innerHTML =
+      "<tr><td colspan='7'>Error loading receipts</td></tr>";
+    console.error(err);
+  }
+}
+
+function renderSales() {
+  const q = document.getElementById("search").value.toLowerCase().trim();
+  const table = document.getElementById("salesTable");
+
+  const filtered = SALES.filter(s =>
+    String(s.invoiceNo || "").toLowerCase().includes(q) ||
+    String(s.staffName || "").toLowerCase().includes(q)
+  );
+
+  if (filtered.length === 0) {
+    table.innerHTML = "<tr><td colspan='7'>No receipts found</td></tr>";
+    return;
+  }
+
+  table.innerHTML = filtered.map(s => `
+    <tr>
+      <td>${s.invoiceNo ?? ""}</td>
+      <td>${formatDate(s.saleDate)}</td>
+      <td>${s.staffName ?? ""}</td>
+      <td>${s.paymentMethod ?? "-"}</td>
+      <td>${statusBadge(s.status)}</td>
+      <td>${money(s.totalAmount)}</td>
+      <td>
+        <button class="btn" onclick="viewReceipt('${String(s.invoiceNo).replace(/'/g, "\\'")}')">
+          <i class="fas fa-eye"></i> View
+        </button>
+        ${IS_ADMIN ? `
+          <button class="btn red" onclick="deleteHistory('${String(s.invoiceNo).replace(/'/g, "\\'")}')">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        ` : ``}
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function viewReceipt(invoiceNo) {
+  try {
+    const sale = SALES.find(s => String(s.invoiceNo) === String(invoiceNo));
+    CURRENT_RECEIPT = sale || null;
+
+    const res = await fetch("/api/receipt/" + encodeURIComponent(invoiceNo));
+    if (!res.ok) throw new Error("Failed to fetch receipt");
+
+    const data = await res.json();
+    const items = Array.isArray(data.items) ? data.items : [];
+
+    document.getElementById("receiptDate").textContent =
+      sale ? formatDate(sale.saleDate) : "—";
+    document.getElementById("receiptInvoice").textContent = "#" + invoiceNo;
+    document.getElementById("receiptStaff").textContent = sale?.staffName || "-";
+    document.getElementById("receiptPaymentMethod").textContent = sale?.paymentMethod || "-";
+
+    const itemsBox = document.getElementById("receiptItems");
+
+    if (items.length === 0) {
+      itemsBox.innerHTML = `
+        <div class="item-row">
+          <div class="item-desc">No products found</div>
+          <div class="item-price">$0.00</div>
+        </div>
+      `;
+    } else {
+      itemsBox.innerHTML = items.map(i => `
+        <div class="item-row">
+          <div class="item-desc">
+            ${i.productName || i.productCode || "Product"}
+            ${i.quantity ? `<br><span class="small-muted">Qty: ${i.quantity}</span>` : ""}
+          </div>
+          <div class="item-price">${money(i.subTotal ?? ((i.quantity || 0) * (i.price || 0)))}</div>
+        </div>
+      `).join("");
+    }
+
+    const subTotal = items.reduce((sum, i) => {
+      const rowTotal = Number(i.subTotal ?? ((i.quantity || 0) * (i.price || 0)));
+      return sum + rowTotal;
+    }, 0);
+
+    const total = Number(sale?.totalAmount ?? subTotal);
+    const tax = total > subTotal ? total - subTotal : 0;
+
+    document.getElementById("receiptTax").textContent = money(tax);
+    document.getElementById("receiptTotal").textContent = money(total);
+    document.getElementById("barcodeText").textContent =
+      "#" + String(invoiceNo).padEnd(15, "0") + "#";
+
+    document.getElementById("modal").classList.add("show");
+  } catch (err) {
+    console.error(err);
+    alert("Cannot load receipt");
+  }
+}
+
+function closeModal() {
+  document.getElementById("modal").classList.remove("show");
+}
+
+function printReceipt() {
+  window.print();
+}
+
+async function deleteHistory(invoiceNo){
+  if(!IS_ADMIN){
+    alert("Only Admin can delete receipt history.");
+    return;
+  }
+  if(!confirm(`Delete receipt history for invoice ${invoiceNo}?`)) return;
+
+  try{
+    const res = await fetch("/api/receipt-history/" + encodeURIComponent(invoiceNo), {
+      method: "DELETE"
+    });
+    if(!res.ok){
+      const text = await res.text().catch(() => "Delete failed");
+      return alert(text);
+    }
+
+    SALES = SALES.filter(s => String(s.invoiceNo) !== String(invoiceNo));
+    if (CURRENT_RECEIPT && String(CURRENT_RECEIPT.invoiceNo) === String(invoiceNo)) {
+      closeModal();
+      CURRENT_RECEIPT = null;
+    }
+    renderSales();
+  }catch(err){
+    alert("Error deleting history");
+  }
+}
+
+async function clearHistory(){
+  if(!IS_ADMIN){
+    alert("Only Admin can clear receipt history.");
+    return;
+  }
+  if(!confirm("Clear all receipt history?")) return;
+
+  try{
+    const res = await fetch("/api/receipt-history", { method: "DELETE" });
+    if(!res.ok){
+      const text = await res.text().catch(() => "Clear failed");
+      return alert(text);
+    }
+
+    SALES = [];
+    CURRENT_RECEIPT = null;
+    closeModal();
+    renderSales();
+  }catch(err){
+    alert("Error clearing history");
+  }
+}
+
+window.addEventListener("click", function (e) {
+  const modal = document.getElementById("modal");
+  if (e.target === modal) closeModal();
+});
+
+if (guardLoginAndRole()) {
+  loadSales();
+}
+</script>
+
+</body>
+</html>

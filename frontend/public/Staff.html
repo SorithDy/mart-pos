@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="runtime-config.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Staff - Mart Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <link rel="stylesheet" href="css/pages/Staff.css">
+</head>
+<body data-page="staff">
+
+<div class="sidebar" id="sidebar">
+  <div class="logo"><i class="fas fa-store"></i><span>Mart Dashboard</span></div>
+  <ul>
+    <li onclick="go('Dashboard-page.html')"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+    <li onclick="go('POS.html')"><i class="fas fa-cash-register"></i> POS</li>
+    <li onclick="go('LowStock.html')"><i class="fas fa-box"></i> Low Stock</li>
+    <li onclick="go('ReceiptHistory.html')"> <i class="fas fa-file-invoice"></i> Receipt History </li>
+    <li onclick="go('Product.html')"><i class="fas fa-boxes"></i> Products</li>
+    <li onclick="go('ProductCategory.html')"><i class="fas fa-tags"></i> Category</li>
+    <li onclick="go('Promotions.html')"><i class="fas fa-tags"></i> Promotions</li>
+    <li class="active"><i class="fas fa-user-cog"></i> Staff</li>
+    <li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
+  </ul>
+</div>
+
+<div class="navbar">
+  <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+      <i class="fas fa-home"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+      <i class="fas fa-user"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" aria-label="Settings">
+      <i class="fas fa-cog"></i>
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <h2>Staff List</h2>
+
+  <div class="topbar">
+    <div class="search">
+      <i class="fas fa-search"></i>
+      <input id="q" placeholder="Search by ID / Name / Phone / Office / Job..." oninput="render()">
+    </div>
+    <div class="topbar-actions">
+      <button class="btn" id="addEmployeeBtn" onclick="openAdd()"><i class="fas fa-plus"></i> Add Employee</button>
+      <button class="btn gray" onclick="load()">Reload</button>
+    </div>
+  </div>
+
+  <div id="err" class="errorbox"></div>
+  <div id="roleNote" class="role-note">Only Admin can add, edit, or delete employees.</div>
+
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th class="col-image">Image</th>
+        <th class="col-employee">Employee No</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th class="col-extension">Extension</th>
+        <th class="col-phone">Phone Number</th>
+        <th class="col-office">Office</th>
+        <th class="col-reports">Reports To</th>
+        <th>Job Title</th>
+        <th class="col-action">Action</th>
+      </tr>
+    </thead>
+    <tbody id="tb">
+      <tr><td colspan="10">Loading...</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">API: <code>/api/employees</code> | Collection: <b>Mart_employees</b></div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalTitle">Add Employee</h3>
+      <div class="modal-close" onclick="closeModal()">&times;</div>
+    </div>
+
+    <div class="form-grid">
+      <div class="image-field">
+        <label>Employee Image</label>
+        <div class="image-preview-wrap">
+          <img id="imagePreview" class="image-preview" alt="Employee preview">
+          <div id="imagePlaceholder" class="image-placeholder">No image</div>
+          <div class="image-upload-details">
+            <input id="imageFile" type="file" accept="image/*" onchange="handleImageChange(event)">
+            <input id="image" type="hidden">
+            <div class="image-help">Upload a staff photo. JPG, PNG, or WEBP.</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <label>Employee Number</label>
+        <input id="employeeNumber" type="number" placeholder="1002">
+      </div>
+      <div>
+        <label>Extension</label>
+        <input id="extension" placeholder="x1234">
+      </div>
+      <div>
+        <label>First Name</label>
+        <input id="firstName" placeholder="John">
+      </div>
+      <div>
+        <label>Last Name</label>
+        <input id="lastName" placeholder="Doe">
+      </div>
+      <div>
+        <label>Phone Number</label>
+        <input id="phoneNumber" placeholder="012345678">
+      </div>
+      <div>
+        <label>Office Code</label>
+        <input id="officeCode" placeholder="1">
+      </div>
+      <div>
+        <label>Reports To</label>
+        <input id="reportsTo" placeholder="1001 or employer">
+      </div>
+      <div class="form-full">
+        <label>Job Title</label>
+        <input id="jobTitle" placeholder="Sales Rep">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn gray" onclick="closeModal()">Cancel</button>
+      <button class="btn" id="saveBtn" onclick="saveEmployee()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared-sidebar.js"></script>
+<script>
+function toggleSidebar(){
+  const sidebar = document.getElementById("sidebar");
+  const navbar = document.querySelector(".navbar");
+  const main = document.querySelector(".main");
+
+  if(window.innerWidth <= 768){
+    sidebar.classList.toggle("open");
+    return;
+  }
+
+  sidebar.classList.toggle("closed");
+  navbar.classList.toggle("full");
+  main.classList.toggle("full");
+}
+function go(p){ window.location.href = p; }
+function logout(){ window.location.href = "login.html"; }
+
+let ALL = [];
+let EDITING_ID = null;
+let CURRENT_USER = null;
+let IS_ADMIN = false;
+let PENDING_IMAGE_FILE = null;
+let IMAGE_PREVIEW_URL = null;
+
+function getFormFields(){
+  return {
+    employeeNumber: document.getElementById("employeeNumber"),
+    image: document.getElementById("image"),
+    imageFile: document.getElementById("imageFile"),
+    firstName: document.getElementById("firstName"),
+    lastName: document.getElementById("lastName"),
+    extension: document.getElementById("extension"),
+    phoneNumber: document.getElementById("phoneNumber"),
+    officeCode: document.getElementById("officeCode"),
+    reportsTo: document.getElementById("reportsTo"),
+    jobTitle: document.getElementById("jobTitle")
+  };
+}
+
+function showError(msg){
+  const box = document.getElementById("err");
+  if(!msg){ box.style.display="none"; box.textContent=""; return; }
+  box.style.display="block";
+  box.textContent = msg;
+}
+
+function guardLoginAndRole(){
+  const raw = localStorage.getItem("martUser");
+  if(!raw){
+    window.location.href = "login.html";
+    return false;
+  }
+
+  try{
+    CURRENT_USER = JSON.parse(raw);
+  }catch{
+    localStorage.removeItem("martUser");
+    window.location.href = "login.html";
+    return false;
+  }
+
+  IS_ADMIN = String(CURRENT_USER.role || "User").toLowerCase() === "admin";
+  if(!IS_ADMIN){
+    alert("Only Admin can access Staff page.");
+    window.location.href = "Dashboard-page.html";
+    return false;
+  }
+
+  const addBtn = document.getElementById("addEmployeeBtn");
+  const roleNote = document.getElementById("roleNote");
+  if(addBtn) addBtn.style.display = IS_ADMIN ? "" : "none";
+  if(roleNote) roleNote.style.display = IS_ADMIN ? "none" : "block";
+  return true;
+}
+
+async function load(){
+  const tb = document.getElementById("tb");
+  tb.innerHTML = "<tr><td colspan='10'>Loading...</td></tr>";
+  showError("");
+
+  try{
+    const res = await fetch("/api/employees", { cache:"no-store" });
+    if(!res.ok){
+      const t = await res.text().catch(()=> "");
+      showError("API Error: /api/employees\nStatus: " + res.status + "\n" + t);
+      tb.innerHTML = "<tr><td colspan='10'>Error loading staff</td></tr>";
+      return;
+    }
+
+    const data = await res.json();
+    ALL = data.employees || [];
+    render();
+  }catch(e){
+    showError("Cannot connect to API. Make sure server is running.\n\n" + (e?.message || e));
+    tb.innerHTML = "<tr><td colspan='10'>Error loading staff</td></tr>";
+  }
+}
+
+function render(){
+  const tb = document.getElementById("tb");
+  const q = (document.getElementById("q").value || "").toLowerCase().trim();
+
+  let list = ALL;
+  if(q){
+    list = list.filter(e =>
+      String(e.employeeNumber ?? "").toLowerCase().includes(q) ||
+      String(e.firstName ?? "").toLowerCase().includes(q) ||
+      String(e.lastName ?? "").toLowerCase().includes(q) ||
+      String(e.phoneNumber ?? "").toLowerCase().includes(q) ||
+      String(e.officeCode ?? "").toLowerCase().includes(q) ||
+      String(e.jobTitle ?? "").toLowerCase().includes(q) ||
+      String(e.reportsTo ?? "").toLowerCase().includes(q)
+    );
+  }
+
+  if(list.length === 0){
+    tb.innerHTML = "<tr><td colspan='10'>No staff found</td></tr>";
+    return;
+  }
+
+  function displayPhoneNumber(value){
+    const text = String(value ?? "").trim();
+    return text || "-";
+  }
+
+  function displayReportsTo(value){
+    if(value === 0 || value === "0" || value == null) return "-";
+    const text = String(value).trim();
+    return text || "-";
+  }
+
+  function renderImageCell(employee){
+    const image = String(employee.image || "").trim();
+    const label = String(employee.firstName || employee.lastName || "U").trim().charAt(0).toUpperCase() || "U";
+    if(image){
+      return `<div class="staff-photo-cell"><img class="staff-photo" src="${image}" alt="Employee image"></div>`;
+    }
+    return `<div class="staff-photo-cell"><div class="staff-photo-fallback">${label}</div></div>`;
+  }
+
+  tb.innerHTML = list.map(e => `
+    <tr>
+      <td>${renderImageCell(e)}</td>
+      <td>${e.employeeNumber ?? ""}</td>
+      <td>${e.firstName ?? ""}</td>
+      <td>${e.lastName ?? ""}</td>
+      <td>${e.extension ?? ""}</td>
+      <td>${displayPhoneNumber(e.phoneNumber)}</td>
+      <td>${e.officeCode ?? ""}</td>
+      <td>${displayReportsTo(e.reportsTo)}</td>
+      <td>${e.jobTitle ?? ""}</td>
+      <td>${IS_ADMIN ? `
+        <button class="btn small" onclick="openEdit('${e.employeeNumber}')"><i class="fas fa-pen"></i> Edit</button>
+        <button class="btn small red" onclick="deleteEmployee('${e.employeeNumber}')"><i class="fas fa-trash"></i> Delete</button>
+      ` : `<span style="color:#777;">Admin only</span>`}</td>
+    </tr>
+  `).join("");
+}
+
+function openAdd(){
+  if(!IS_ADMIN){
+    alert("Only Admin can add employees.");
+    return;
+  }
+  EDITING_ID = null;
+  const fields = getFormFields();
+  document.getElementById("modalTitle").textContent = "Add Employee";
+  document.getElementById("saveBtn").textContent = "Save";
+  fields.employeeNumber.disabled = false;
+  fields.image.value = "";
+  fields.imageFile.value = "";
+  PENDING_IMAGE_FILE = null;
+  updateImagePreview("");
+  fields.employeeNumber.value = "";
+  fields.firstName.value = "";
+  fields.lastName.value = "";
+  fields.extension.value = "";
+  fields.phoneNumber.value = "";
+  fields.officeCode.value = "";
+  fields.reportsTo.value = "";
+  fields.jobTitle.value = "";
+  document.getElementById("modal").classList.add("show");
+}
+
+function openEdit(employeeNo){
+  if(!IS_ADMIN){
+    alert("Only Admin can edit employees.");
+    return;
+  }
+  const e = ALL.find(x => String(x.employeeNumber) === String(employeeNo));
+  if(!e) return;
+  EDITING_ID = String(employeeNo);
+  const fields = getFormFields();
+  document.getElementById("modalTitle").textContent = "Edit Employee";
+  document.getElementById("saveBtn").textContent = "Update";
+  fields.employeeNumber.disabled = false;
+  fields.image.value = e.image ?? "";
+  fields.imageFile.value = "";
+  PENDING_IMAGE_FILE = null;
+  updateImagePreview(e.image ?? "");
+  fields.employeeNumber.value = e.employeeNumber ?? "";
+  fields.firstName.value = e.firstName ?? "";
+  fields.lastName.value = e.lastName ?? "";
+  fields.extension.value = e.extension ?? "";
+  fields.phoneNumber.value = e.phoneNumber ?? "";
+  fields.officeCode.value = e.officeCode ?? "";
+  fields.reportsTo.value = e.reportsTo ?? "";
+  fields.jobTitle.value = e.jobTitle ?? "";
+  document.getElementById("modal").classList.add("show");
+}
+
+function closeModal(){
+  document.getElementById("modal").classList.remove("show");
+}
+
+function updateImagePreview(src){
+  const preview = document.getElementById("imagePreview");
+  const placeholder = document.getElementById("imagePlaceholder");
+  const cleanSrc = String(src || "").trim();
+
+  if(IMAGE_PREVIEW_URL && IMAGE_PREVIEW_URL !== cleanSrc){
+    URL.revokeObjectURL(IMAGE_PREVIEW_URL);
+    IMAGE_PREVIEW_URL = null;
+  }
+
+  if(cleanSrc){
+    preview.src = cleanSrc;
+    preview.classList.add("show");
+    placeholder.style.display = "none";
+    return;
+  }
+
+  preview.removeAttribute("src");
+  preview.classList.remove("show");
+  placeholder.style.display = "grid";
+}
+
+function handleImageChange(event){
+  const fields = getFormFields();
+  const file = event.target.files && event.target.files[0];
+  PENDING_IMAGE_FILE = file || null;
+
+  if(!file){
+    updateImagePreview(fields.image.value || "");
+    return;
+  }
+
+  const localUrl = URL.createObjectURL(file);
+  if(IMAGE_PREVIEW_URL){
+    URL.revokeObjectURL(IMAGE_PREVIEW_URL);
+  }
+  IMAGE_PREVIEW_URL = localUrl;
+  updateImagePreview(localUrl);
+}
+
+async function uploadEmployeeImageIfNeeded(){
+  const fields = getFormFields();
+  if(!PENDING_IMAGE_FILE){
+    return String(fields.image.value || "").trim();
+  }
+
+  const formData = new FormData();
+  formData.append("image", PENDING_IMAGE_FILE);
+
+  const res = await fetch("/api/upload/staff", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok){
+    throw new Error(data.message || data.error || "Image upload failed");
+  }
+
+  const imageUrl = String(data.imageUrl || "").trim();
+  fields.image.value = imageUrl;
+  PENDING_IMAGE_FILE = null;
+  return imageUrl;
+}
+
+async function saveEmployee(){
+  if(!IS_ADMIN){
+    alert("Only Admin can save employees.");
+    return;
+  }
+  const fields = getFormFields();
+  const payload = {
+    employeeNumber: Number(fields.employeeNumber.value),
+    firstName: fields.firstName.value.trim(),
+    lastName: fields.lastName.value.trim(),
+    extension: fields.extension.value.trim(),
+    phoneNumber: fields.phoneNumber.value.trim(),
+    officeCode: fields.officeCode.value.trim(),
+    reportsTo: fields.reportsTo.value.trim(),
+    jobTitle: fields.jobTitle.value.trim()
+  };
+
+  if(!Number.isInteger(payload.employeeNumber)){
+    return alert("Employee Number must be a valid integer");
+  }
+  if(!payload.firstName || !payload.lastName){
+    return alert("First Name and Last Name are required");
+  }
+
+  try{
+    payload.image = await uploadEmployeeImageIfNeeded();
+
+    const res = await fetch(
+      EDITING_ID ? `/api/employees/${EDITING_ID}` : "/api/employees",
+      {
+        method: EDITING_ID ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    if(!res.ok){
+      const text = await res.text().catch(() => "Save failed");
+      return alert(text);
+    }
+
+    EDITING_ID = null;
+    closeModal();
+    await load();
+  }catch(err){
+    alert("Error: " + (err?.message || err));
+  }
+}
+
+async function deleteEmployee(employeeNo){
+  if(!IS_ADMIN){
+    alert("Only Admin can delete employees.");
+    return;
+  }
+  if(!confirm("Delete this employee?")) return;
+  try{
+    const res = await fetch(`/api/employees/${employeeNo}`, { method:"DELETE" });
+    if(!res.ok){
+      const text = await res.text().catch(() => "Delete failed");
+      return alert(text);
+    }
+    await load();
+  }catch(err){
+    alert("Error: " + (err?.message || err));
+  }
+}
+
+if(guardLoginAndRole()){
+  load();
+}
+</script>
+
+</body>
+</html>

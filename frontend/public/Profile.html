@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="runtime-config.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile - Mart Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/pages/Profile.css">
+</head>
+<body data-page="">
+
+<div class="sidebar" id="sidebar"></div>
+
+<div class="navbar">
+  <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+      <i class="fas fa-home"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+      <i class="fas fa-user"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" aria-label="Settings">
+      <i class="fas fa-cog"></i>
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <section class="hero">
+    <div class="hero-copy">
+      <small><i class="fas fa-id-badge"></i> Personal Workspace</small>
+      <h1>Manage your profile and account security.</h1>
+      <p>Update your display name, review your account role, and keep your password current from one clean profile page.</p>
+    </div>
+    <div class="hero-badge">
+      <strong>Current Session</strong>
+      <span id="sessionName">Loading...</span>
+    </div>
+  </section>
+
+  <div class="layout">
+    <section class="profile-card">
+      <div class="avatar-wrap">
+        <div class="avatar-shell">
+          <div class="avatar" id="avatarBox">U</div>
+          <div class="avatar-meta">
+            <div class="avatar-label"><i class="fas fa-camera-retro"></i> Staff Photo</div>
+            <div class="avatar-subtext">Your profile image is linked automatically from the Staff page.</div>
+          </div>
+        </div>
+        <div class="presence" id="profileStatusBadge">Active</div>
+      </div>
+
+      <div class="identity">
+        <h2 id="profileName">Loading...</h2>
+        <p id="profileUsername">@username</p>
+      </div>
+
+      <div class="meta">
+        <div class="meta-item">
+          <i class="fas fa-user-tag"></i>
+          <div>
+            <strong>Role</strong>
+            <span id="profileRole">-</span>
+          </div>
+        </div>
+        <div class="meta-item">
+          <i class="fas fa-id-card"></i>
+          <div>
+            <strong>Employee Number</strong>
+            <span id="profileEmployee">-</span>
+          </div>
+        </div>
+        <div class="meta-item">
+          <i class="fas fa-phone"></i>
+          <div>
+            <strong>Phone Number</strong>
+            <span id="profilePhone">-</span>
+          </div>
+        </div>
+        <div class="meta-item">
+          <i class="fas fa-shield-halved"></i>
+          <div>
+            <strong>Status</strong>
+            <span id="profileStatus">-</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <div>
+          <h3>Profile Center</h3>
+          <p>Keep your information accurate and your account secure.</p>
+        </div>
+        <div class="section-chip">My Account</div>
+      </div>
+
+      <div class="stack">
+        <div class="section-block">
+          <div class="section-head section-head-spaced">
+            <div>
+              <h3>Profile Information</h3>
+              <p>Edit the information shown across the dashboard.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label>Username</label>
+            <input id="username" title="Username" placeholder="Username" readonly>
+            </div>
+            <div class="field">
+              <label>Full Name</label>
+              <input id="fullName" placeholder="Enter full name">
+            </div>
+            <div class="field">
+              <label>Role</label>
+            <input id="role" title="Role" placeholder="Role" readonly>
+            </div>
+            <div class="field">
+              <label>Employee Number</label>
+            <input id="employeeNumber" title="Employee number" placeholder="Employee number" readonly>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="section-block">
+          <div class="section-head section-head-spaced">
+            <div>
+              <h3>Change Password</h3>
+              <p>Use your current password to confirm this update.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field full">
+              <label>Current Password</label>
+              <input id="currentPassword" type="password" placeholder="Enter current password">
+            </div>
+            <div class="field">
+              <label>New Password</label>
+              <input id="newPassword" type="password" placeholder="Enter new password">
+            </div>
+            <div class="field">
+              <label>Confirm New Password</label>
+              <input id="confirmPassword" type="password" placeholder="Confirm new password">
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn gray" onclick="clearPasswordFields()">Clear</button>
+            <button class="btn" onclick="changePassword()">Update Password</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="message" id="messageBox"></div>
+    </section>
+  </div>
+</div>
+
+<script src="shared-sidebar.js"></script>
+<script>
+function toggleSidebar(){
+  const sidebar = document.getElementById("sidebar");
+  const navbar = document.querySelector(".navbar");
+  const main = document.querySelector(".main");
+
+  if(window.innerWidth <= 768){
+    sidebar.classList.toggle("open");
+    return;
+  }
+
+  sidebar.classList.toggle("closed");
+  navbar.classList.toggle("full");
+  main.classList.toggle("full");
+}
+
+function go(p){ window.location.href = p; }
+
+let CURRENT_USER = null;
+let CURRENT_ACCOUNT = null;
+
+function showMessage(text, type){
+  const box = document.getElementById("messageBox");
+  box.textContent = text || "";
+  box.className = `message show ${type || "success"}`;
+}
+
+function clearMessage(){
+  const box = document.getElementById("messageBox");
+  box.textContent = "";
+  box.className = "message";
+}
+
+function clearPasswordFields(){
+  document.getElementById("currentPassword").value = "";
+  document.getElementById("newPassword").value = "";
+  document.getElementById("confirmPassword").value = "";
+}
+
+function renderAvatar(imageUrl, fallbackLetter){
+  const avatarBox = document.getElementById("avatarBox");
+  const cleanUrl = String(imageUrl || "").trim();
+  const letter = String(fallbackLetter || "U").trim().charAt(0).toUpperCase() || "U";
+
+  if(cleanUrl){
+    avatarBox.innerHTML = `<img src="${cleanUrl}" alt="Profile image">`;
+    return;
+  }
+
+  avatarBox.textContent = letter;
+}
+
+function normalizeName(value){
+  return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function guardLogin(){
+  const raw = localStorage.getItem("martUser");
+  if(!raw){
+    window.location.href = "login.html";
+    return false;
+  }
+
+  try{
+    CURRENT_USER = JSON.parse(raw);
+  }catch{
+    localStorage.removeItem("martUser");
+    window.location.href = "login.html";
+    return false;
+  }
+  return true;
+}
+
+function fillProfile(account){
+  CURRENT_ACCOUNT = account;
+  const fullName = account.fullName || "";
+  const username = account.username || "";
+  const phoneNumber = account.staffPhoneNumber || account.phoneNumber || "";
+  const status = account.status || "-";
+  const firstLetter = (fullName || username || "U").charAt(0).toUpperCase();
+
+  renderAvatar(account.staffImage || "", firstLetter);
+  document.getElementById("profileName").textContent = fullName || username;
+  document.getElementById("profileUsername").textContent = `@${username}`;
+  document.getElementById("profileRole").textContent = account.role || "User";
+  document.getElementById("profileEmployee").textContent = account.employeeNumber ?? "-";
+  document.getElementById("profilePhone").textContent = phoneNumber || "-";
+  document.getElementById("profileStatus").textContent = status;
+  document.getElementById("profileStatusBadge").textContent = status;
+  document.getElementById("sessionName").textContent = fullName || username;
+
+  document.getElementById("username").value = username;
+  document.getElementById("fullName").value = fullName;
+  document.getElementById("role").value = account.role || "User";
+  document.getElementById("employeeNumber").value = account.employeeNumber ?? "";
+}
+
+async function loadProfile(){
+  try{
+    const [accountRes, employeeRes] = await Promise.all([
+      fetch("/api/accounts", { cache:"no-store" }),
+      fetch("/api/employees", { cache:"no-store" })
+    ]);
+
+    const accountData = await accountRes.json();
+    const employeeData = await employeeRes.json().catch(() => ({ employees: [] }));
+
+    if(!accountRes.ok){
+      showMessage(accountData.message || "Failed to load profile", "error");
+      return;
+    }
+
+    const account = (accountData.accounts || []).find(
+      a => String(a.username || "") === String(CURRENT_USER?.username || "")
+    );
+
+    if(!account){
+      showMessage("Current account not found.", "error");
+      return;
+    }
+
+    const accountFullName = normalizeName(account.fullName || "");
+    const matchedEmployee = (employeeData.employees || []).find(e => {
+      const sameEmployeeNumber = String(e.employeeNumber ?? "") === String(account.employeeNumber ?? "");
+      const employeeFullName = normalizeName(`${e.firstName || ""} ${e.lastName || ""}`);
+      const sameFullName = accountFullName && employeeFullName === accountFullName;
+      return sameEmployeeNumber || sameFullName;
+    });
+
+    if(matchedEmployee){
+      account.employeeNumber = matchedEmployee.employeeNumber ?? account.employeeNumber;
+      account.staffImage = String(matchedEmployee.image || "").trim();
+      account.staffPhoneNumber = String(matchedEmployee.phoneNumber || "").trim();
+    }
+
+    fillProfile(account);
+    clearMessage();
+  }catch(err){
+    showMessage("Error loading profile", "error");
+  }
+}
+
+async function saveProfile(){
+  if(!CURRENT_ACCOUNT) return;
+
+  const fullName = document.getElementById("fullName").value.trim();
+  if(!fullName){
+    showMessage("Full name is required.", "error");
+    return;
+  }
+
+  try{
+    const res = await fetch(`/api/accounts/${encodeURIComponent(CURRENT_ACCOUNT.username)}/profile`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fullName })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok){
+      showMessage(data.message || "Failed to update profile", "error");
+      return;
+    }
+
+    CURRENT_USER.fullName = fullName;
+    localStorage.setItem("martUser", JSON.stringify(CURRENT_USER));
+    await loadProfile();
+    showMessage("Profile updated successfully.", "success");
+  }catch(err){
+    showMessage("Error updating profile", "error");
+  }
+}
+
+async function changePassword(){
+  if(!CURRENT_ACCOUNT) return;
+
+  const currentPassword = document.getElementById("currentPassword").value.trim();
+  const newPassword = document.getElementById("newPassword").value.trim();
+  const confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+  if(!currentPassword || !newPassword || !confirmPassword){
+    showMessage("Please fill all password fields.", "error");
+    return;
+  }
+
+  if(newPassword !== confirmPassword){
+    showMessage("New password and confirm password do not match.", "error");
+    return;
+  }
+
+  try{
+    const res = await fetch(`/api/accounts/${encodeURIComponent(CURRENT_ACCOUNT.username)}/password`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok){
+      showMessage(data.message || "Failed to update password", "error");
+      return;
+    }
+
+    clearPasswordFields();
+    showMessage("Password updated successfully.", "success");
+    await loadProfile();
+  }catch(err){
+    showMessage("Error updating password", "error");
+  }
+}
+
+if(guardLogin()){
+  loadProfile();
+}
+</script>
+</body>
+</html>

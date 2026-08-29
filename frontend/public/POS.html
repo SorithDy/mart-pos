@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="runtime-config.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POS - Mart Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <link rel="stylesheet" href="css/pages/POS.css">
+</head>
+<body data-page="pos">
+
+  <div class="sidebar" id="sidebar">
+    <div class="logo">
+      <i class="fas fa-store"></i>
+      <span>Mart Dashboard</span>
+    </div>
+
+    <ul>
+      <li onclick="go('Dashboard-page.html')"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+      <li class="active"><i class="fas fa-cash-register"></i> POS</li>
+      <li onclick="go('LowStock.html')"><i class="fas fa-box"></i> Low Stock</li>
+      <li onclick="go('ReceiptHistory.html')"><i class="fas fa-file-invoice"></i> Receipt History</li>
+      <li id="menuProducts" onclick="go('Product.html')"><i class="fas fa-boxes"></i> Products</li>
+      <li id="menuCategory" onclick="go('ProductCategory.html')"><i class="fas fa-tags"></i> Category</li>
+      <li onclick="go('Promotions.html')"><i class="fas fa-tags"></i> Promotions</li>
+      <li id="menuStaff" onclick="go('Staff.html')"><i class="fas fa-user-cog"></i> Staff</li>
+      <li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
+    </ul>
+  </div>
+
+  <div class="navbar" id="navbar">
+    <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div class="nav-actions">
+      <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+        <i class="fas fa-home"></i>
+      </button>
+      <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+        <i class="fas fa-user"></i>
+      </button>
+      <button class="nav-icon-btn" type="button" aria-label="Settings">
+        <i class="fas fa-cog"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="main" id="main">
+    <h2>POS System</h2>
+    <div class="user-badge" id="userBadge"></div>
+
+    <div class="search">
+      <i class="fas fa-search"></i>
+      <input id="search" placeholder="Search product..." oninput="renderProducts()">
+    </div>
+
+    <div class="pos-container">
+      <div class="products">
+        <h3>Products</h3>
+        <div class="small-muted promotion-note">Promotions are applied automatically when active.</div>
+        <div class="product-grid" id="productGrid">Loading products...</div>
+      </div>
+
+      <div class="order-panel">
+        <h3>Order Details</h3>
+
+        <div class="field">
+          <label>Employee Number</label>
+          <input id="employeeNumber" type="number" placeholder="1002" readonly>
+        </div>
+
+        <div class="field">
+          <label>Payment Method</label>
+          <select id="paymentMethod" aria-label="Payment method">
+            <option>Cash</option>
+            <option>Card</option>
+            <option>ABA</option>
+            <option>Wing</option>
+          </select>
+        </div>
+
+        <div class="order-items" id="cartItems"></div>
+
+        <div class="summary">
+          <div class="order-row">
+            <span>Subtotal</span>
+            <span>$<span id="subtotal">0.00</span></span>
+          </div>
+
+          <div class="order-row">
+            <span>Discount</span>
+            <span>-$<span id="discountTotal">0.00</span></span>
+          </div>
+
+          <div class="order-row">
+            <span>Total</span>
+            <span>$<span id="total">0.00</span></span>
+          </div>
+
+          <button class="pay-btn" id="payBtn" onclick="payNow()">Pay Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pay-modal-overlay" id="payModal">
+    <div class="pay-modal">
+      <div class="pay-icon">
+        <i class="fas fa-qrcode"></i>
+      </div>
+
+      <div class="pay-title" id="payTitle">Confirm Payment?</div>
+      <div class="pay-subtitle" id="payModalText">Please confirm payment.</div>
+
+      <div class="pay-total">Total: $<span id="modalTotalAmount">0.00</span></div>
+
+      <div class="qr-wrap hidden" id="qrSection">
+        <div class="qr-label">Scan to ABA</div>
+        <div id="abaQrBox"></div>
+        <div class="pay-status" id="abaPayStatus"></div>
+      </div>
+
+      <div class="pay-actions">
+        <button class="pay-cancel" onclick="closePayModal()">Cancel</button>
+        <button class="pay-ok" id="modalOkBtn" onclick="confirmCashLikePayment()">Ok</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared-sidebar.js"></script>
+  <script>
+    function go(page){ window.location.href = page; }
+
+    function logout(){
+      localStorage.removeItem("martUser");
+      window.location.href = "login.html";
+    }
+
+    function toggleSidebar(){
+      const sidebar = document.getElementById("sidebar");
+      const navbar = document.getElementById("navbar");
+      const main = document.getElementById("main");
+
+      if (window.innerWidth <= 768) {
+        sidebar.classList.toggle("open");
+        return;
+      }
+
+      sidebar.classList.toggle("closed");
+      navbar.classList.toggle("full");
+      main.classList.toggle("full");
+    }
+
+    let PRODUCTS = [];
+    let PROMOTIONS = [];
+    let cart = [];
+    let CURRENT_USER = null;
+
+    let pendingCheckoutPayload = null;
+    let pendingAbaInfo = null;
+    let abaPollTimer = null;
+
+    function money(v){
+      return Number(v || 0).toFixed(2);
+    }
+
+    function todayStr(){
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function isPromotionActive(promo){
+      const statusOk = String(promo.status || "").toLowerCase() === "active";
+      if (!statusOk) return false;
+
+      const today = todayStr();
+      const startOk = !promo.startDate || String(promo.startDate) <= today;
+      const endOk = !promo.endDate || String(promo.endDate) >= today;
+
+      return startOk && endOk;
+    }
+
+    function getPromotionForProduct(productCode){
+      return PROMOTIONS.find(p =>
+        String(p.productCode || "") === String(productCode) &&
+        isPromotionActive(p)
+      ) || null;
+    }
+
+    function calcPromoDiscount(basePrice, promo){
+      const price = Number(basePrice || 0);
+      if (!promo) return 0;
+
+      let discount = 0;
+
+      if (promo.discountType === "percent") {
+        discount = price * (Number(promo.discountValue || 0) / 100);
+      } else {
+        discount = Number(promo.discountValue || 0);
+      }
+
+      if (discount < 0) discount = 0;
+      if (discount > price) discount = price;
+
+      return discount;
+    }
+
+    function getFinalPrice(product){
+      const salePrice = Number(product.salePrice || 0);
+      const promo = getPromotionForProduct(product.productCode);
+      const discount = calcPromoDiscount(salePrice, promo);
+      return salePrice - discount;
+    }
+
+    function getPromoLabel(promo){
+      if (!promo) return "";
+      if (promo.discountType === "percent") {
+        return `${Number(promo.discountValue || 0)}% OFF`;
+      }
+      return `$${money(promo.discountValue || 0)} OFF`;
+    }
+
+    function guardLoginAndRole(){
+      const raw = localStorage.getItem("martUser");
+      if(!raw){
+        window.location.href = "login.html";
+        return false;
+      }
+
+      try{
+        CURRENT_USER = JSON.parse(raw);
+      }catch{
+        localStorage.removeItem("martUser");
+        window.location.href = "login.html";
+        return false;
+      }
+
+      const role = String(CURRENT_USER.role || "User").toLowerCase();
+      const isAdmin = role === "admin";
+
+      document.getElementById("userBadge").textContent =
+        `Logged in: ${CURRENT_USER.fullName || CURRENT_USER.username || ""} (${CURRENT_USER.role || "User"})`;
+
+      if (!isAdmin) {
+        const productsMenu = document.getElementById("menuProducts");
+        const categoryMenu = document.getElementById("menuCategory");
+        const staffMenu = document.getElementById("menuStaff");
+
+        if (productsMenu) productsMenu.style.display = "none";
+        if (categoryMenu) categoryMenu.style.display = "none";
+        if (staffMenu) staffMenu.style.display = "none";
+      }
+
+      if (CURRENT_USER.employeeNumber) {
+        document.getElementById("employeeNumber").value = CURRENT_USER.employeeNumber;
+      }
+
+      return true;
+    }
+
+    async function loadProducts(){
+      try{
+        const [productsRes, promotionsRes] = await Promise.all([
+          fetch("/api/products"),
+          fetch("/api/promotions")
+        ]);
+
+        const productsData = await productsRes.json();
+        PRODUCTS = Array.isArray(productsData.products) ? productsData.products : [];
+
+        if (promotionsRes.ok) {
+          const promotionsData = await promotionsRes.json();
+          PROMOTIONS = Array.isArray(promotionsData.promotions) ? promotionsData.promotions : [];
+        } else {
+          PROMOTIONS = [];
+        }
+
+        renderProducts();
+      }catch(err){
+        document.getElementById("productGrid").innerHTML = "Error loading products";
+        console.error(err);
+      }
+    }
+
+    function renderProducts(){
+      const q = document.getElementById("search").value.toLowerCase().trim();
+      const grid = document.getElementById("productGrid");
+
+      const filtered = PRODUCTS.filter(p =>
+        String(p.productCode || "").toLowerCase().includes(q) ||
+        String(p.productName || "").toLowerCase().includes(q) ||
+        String(p.description || "").toLowerCase().includes(q)
+      );
+
+      if (filtered.length === 0) {
+        grid.innerHTML = "No products found";
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => {
+        const salePrice = Number(p.salePrice || 0);
+        const promo = getPromotionForProduct(p.productCode);
+        const finalPrice = getFinalPrice(p);
+        const promoLabel = getPromoLabel(promo);
+        const code = String(p.productCode || "").replace(/'/g, "\\'");
+
+        return `
+          <div class="product-card" onclick="addProduct('${code}')">
+            ${promo ? `<div class="promo-badge">${promoLabel}</div>` : ""}
+            <img src="${p.image || '/image/noimage.png'}" onerror="this.src='/image/noimage.png'">
+            <div class="product-name">${p.productName || ""}</div>
+            <div class="product-price">$${money(finalPrice)}</div>
+            ${promo ? `<div class="product-old-price">$${money(salePrice)}</div>` : `<div class="product-old-price">&nbsp;</div>`}
+            <div class="stock-text">Stock: ${Number(p.stock || 0)}</div>
+            <div class="promo-note">${promo ? promoLabel : ""}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function addProduct(code){
+      const product = PRODUCTS.find(p => String(p.productCode) === String(code));
+      if (!product) return;
+
+      if (Number(product.stock || 0) <= 0) {
+        alert("Out of stock");
+        return;
+      }
+
+      const item = cart.find(p => String(p.productCode) === String(code));
+      const promo = getPromotionForProduct(product.productCode);
+      const basePrice = Number(product.salePrice || 0);
+      const discountPerUnit = calcPromoDiscount(basePrice, promo);
+      const finalPrice = basePrice - discountPerUnit;
+
+      if (item) {
+        if (item.quantity >= Number(product.stock || 0)) {
+          alert("Not enough stock");
+          return;
+        }
+        item.quantity++;
+      } else {
+        cart.push({
+          productCode: product.productCode,
+          productName: product.productName,
+          basePrice,
+          price: finalPrice,
+          discountPerUnit,
+          quantity: 1,
+          promotionID: promo?.promotionID || "",
+          promotionLabel: promo ? getPromoLabel(promo) : ""
+        });
+      }
+
+      renderCart();
+    }
+
+    function renderCart(){
+      const box = document.getElementById("cartItems");
+
+      if (cart.length === 0) {
+        box.innerHTML = `<div class="order-row"><div>No items yet</div><div>$0.00</div></div>`;
+      } else {
+        box.innerHTML = cart.map((p, i) => {
+          const lineFinal = p.price * p.quantity;
+          const lineDiscount = (p.basePrice - p.price) * p.quantity;
+
+          return `
+            <div class="order-row">
+              <div>
+                ${p.productName} (x${p.quantity})
+                <span class="line-sub">$${money(p.basePrice)} each</span>
+                ${lineDiscount > 0 ? `<div class="discount-text">${p.promotionLabel} | Save $${money(lineDiscount)}</div>` : ""}
+              </div>
+              <div>
+                $${money(lineFinal)}
+                <button class="remove" onclick="removeItem(${i})">x</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      const subtotal = cart.reduce((sum, p) => sum + (p.basePrice * p.quantity), 0);
+      const total = cart.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+      const discountTotal = subtotal - total;
+
+      document.getElementById("subtotal").innerText = money(subtotal);
+      document.getElementById("discountTotal").innerText = money(discountTotal);
+      document.getElementById("total").innerText = money(total);
+      document.getElementById("payBtn").disabled = cart.length === 0;
+    }
+
+    function removeItem(i){
+      cart.splice(i, 1);
+      renderCart();
+    }
+
+    function resetPayModalState(){
+      pendingCheckoutPayload = null;
+      pendingAbaInfo = null;
+
+      if (abaPollTimer) {
+        clearInterval(abaPollTimer);
+        abaPollTimer = null;
+      }
+
+      document.getElementById("payModal").classList.remove("show");
+      document.getElementById("qrSection").classList.add("hidden");
+      document.getElementById("abaQrBox").innerHTML = "";
+      document.getElementById("abaPayStatus").textContent = "";
+      document.getElementById("modalOkBtn").disabled = false;
+      document.getElementById("modalOkBtn").textContent = "Ok";
+      document.getElementById("modalOkBtn").onclick = confirmCashLikePayment;
+    }
+
+    function closePayModal(){
+      resetPayModalState();
+    }
+
+    function openSimplePaymentModal(totalAmount, payload){
+      pendingCheckoutPayload = payload;
+
+      document.getElementById("payTitle").textContent = "Confirm Payment?";
+      document.getElementById("payModalText").innerHTML =
+        `Please confirm ${payload.paymentMethod} payment.<br>Customer will pay immediately.`;
+      document.getElementById("modalTotalAmount").textContent = money(totalAmount);
+      document.getElementById("qrSection").classList.add("hidden");
+
+      const okBtn = document.getElementById("modalOkBtn");
+      okBtn.disabled = false;
+      okBtn.textContent = "Ok";
+      okBtn.onclick = confirmCashLikePayment;
+
+      document.getElementById("payModal").classList.add("show");
+    }
+
+    async function openAbaQrModal(totalAmount, payload){
+      pendingCheckoutPayload = payload;
+
+      document.getElementById("payTitle").textContent = "Scan to ABA";
+      document.getElementById("payModalText").innerHTML =
+        `Please scan this ABA QR code and complete payment.`;
+      document.getElementById("modalTotalAmount").textContent = money(totalAmount);
+      document.getElementById("qrSection").classList.remove("hidden");
+      document.getElementById("abaQrBox").innerHTML = "";
+      document.getElementById("abaPayStatus").textContent = "Generating QR...";
+
+      const okBtn = document.getElementById("modalOkBtn");
+      okBtn.disabled = true;
+      okBtn.textContent = "Waiting...";
+      okBtn.onclick = function(){};
+
+      document.getElementById("payModal").classList.add("show");
+
+      try{
+        const res = await fetch("/api/khqr/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: Number(totalAmount),
+            currency: "USD",
+            invoiceNo: "",
+            employeeNumber: payload.employeeNumber,
+            items: payload.items
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || data.error || "Failed to generate ABA QR");
+        }
+
+        pendingAbaInfo = data;
+
+        const qrBox = document.getElementById("abaQrBox");
+        qrBox.innerHTML = "";
+
+        if (data.qrString) {
+          new QRCode(qrBox, {
+            text: data.qrString,
+            width: 150,
+            height: 150
+          });
+        } else if (data.qrImageUrl) {
+          qrBox.innerHTML = `<img src="${data.qrImageUrl}" alt="ABA QR" style="width:150px;height:150px;object-fit:contain;">`;
+        } else {
+          throw new Error("Backend did not return qrString");
+        }
+
+        document.getElementById("abaPayStatus").textContent = "Waiting for customer payment...";
+        startAbaStatusPolling();
+      }catch(err){
+        console.error(err);
+        document.getElementById("abaPayStatus").textContent = err.message || "Failed to generate QR";
+      }
+    }
+
+    function startAbaStatusPolling(){
+      if (!pendingAbaInfo || !pendingAbaInfo.md5) return;
+
+      if (abaPollTimer) clearInterval(abaPollTimer);
+
+      abaPollTimer = setInterval(async () => {
+        try{
+          const res = await fetch(`/api/khqr/status?md5=${encodeURIComponent(pendingAbaInfo.md5)}`);
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data.message || data.error || "Failed to check payment status");
+          }
+
+          const status = String(data.status || "").toLowerCase();
+
+          if (status === "success" || status === "paid") {
+            clearInterval(abaPollTimer);
+            abaPollTimer = null;
+            document.getElementById("abaPayStatus").textContent = "Payment successful.";
+            await finalizeCheckoutAfterAba(data);
+          } else if (status === "failed") {
+            clearInterval(abaPollTimer);
+            abaPollTimer = null;
+            document.getElementById("abaPayStatus").textContent = "Payment failed.";
+          } else if (status === "expired" || status === "timeout") {
+            clearInterval(abaPollTimer);
+            abaPollTimer = null;
+            document.getElementById("abaPayStatus").textContent = "QR expired. Please try again.";
+          } else {
+            document.getElementById("abaPayStatus").textContent = "Waiting for customer payment...";
+          }
+        }catch(err){
+          console.error(err);
+          document.getElementById("abaPayStatus").textContent = err.message || "Error checking payment status";
+        }
+      }, 3000);
+    }
+
+    async function confirmCashLikePayment(){
+      try{
+        if (!pendingCheckoutPayload) return;
+
+        const okBtn = document.getElementById("modalOkBtn");
+        okBtn.disabled = true;
+        okBtn.textContent = "Processing...";
+
+        const res = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(pendingCheckoutPayload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || data.error || "Checkout failed");
+        }
+
+        resetPayModalState();
+        alert("Payment successful! Invoice: " + data.invoiceNo);
+
+        cart = [];
+        renderCart();
+        await loadProducts();
+        document.getElementById("paymentMethod").value = "Cash";
+        window.location.href = "ReceiptHistory.html";
+      }catch(err){
+        console.error(err);
+        document.getElementById("modalOkBtn").disabled = false;
+        document.getElementById("modalOkBtn").textContent = "Ok";
+        alert(err.message || "Checkout failed");
+      }
+    }
+
+    async function finalizeCheckoutAfterAba(abaStatusData){
+      try{
+        if (!pendingCheckoutPayload || !pendingAbaInfo?.md5) return;
+
+        const payload = {
+          ...pendingCheckoutPayload,
+          paymentVerified: true,
+          khqrMd5: pendingAbaInfo.md5,
+          khqrTransactionId: abaStatusData.transactionId || pendingAbaInfo.transactionId || ""
+        };
+
+        const res = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || data.error || "Checkout failed");
+        }
+
+        resetPayModalState();
+        alert("ABA payment successful! Invoice: " + data.invoiceNo);
+
+        cart = [];
+        renderCart();
+        await loadProducts();
+        document.getElementById("paymentMethod").value = "Cash";
+        window.location.href = "ReceiptHistory.html";
+      }catch(err){
+        console.error(err);
+        alert(err.message || "Checkout failed");
+      }
+    }
+
+    async function payNow(){
+      try{
+        if (cart.length === 0) {
+          alert("Cart empty");
+          return;
+        }
+
+        const employeeNumberRaw = document.getElementById("employeeNumber").value.trim();
+        const paymentMethod = document.getElementById("paymentMethod").value;
+
+        const payload = {
+          employeeNumber: employeeNumberRaw ? Number(employeeNumberRaw) : null,
+          paymentMethod,
+          status: "Completed",
+          items: cart.map(item => ({
+            productCode: item.productCode,
+            productName: item.productName,
+            quantity: item.quantity,
+            price: item.price,
+            subTotal: item.quantity * item.price
+          }))
+        };
+
+        const total = cart.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+
+        if (paymentMethod === "ABA") {
+          await openAbaQrModal(total, payload);
+        } else {
+          openSimplePaymentModal(total, payload);
+        }
+      }catch(err){
+        console.error(err);
+        alert(err.message || "Checkout failed");
+      }
+    }
+
+    if (guardLoginAndRole()) {
+      loadProducts();
+      renderCart();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+services:
+  - type: web
+    name: mart-pos-backend
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeployTrigger: commit
+    envVars:
+      - key: MONGO_URL
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://mart-pos-frontend.onrender.com
+      - key: DNS_SERVERS
+        value: 1.1.1.1,8.8.8.8
+      - key: PORT
+        value: 10000
+      - key: USE_BAKONG_LIVE_STATUS
+        value: false
+      - key: BAKONG_BASE_URL
+        sync: false
+      - key: BAKONG_ACCESS_TOKEN
+        sync: false
+      - key: KHQR_BAKONG_ACCOUNT
+        sync: false
+      - key: KHQR_MERCHANT_NAME
+        sync: false
+      - key: KHQR_MERCHANT_CITY
+        value: PHNOM PENH
+      - key: KHQR_MERCHANT_ID
+        sync: false
+      - key: KHQR_ACQUIRING_BANK
+        value: Advanced Bank of Asia Limited Cambodia
+      - key: KHQR_STORE_LABEL
+        value: Mart Dashboard
+      - key: KHQR_TERMINAL_LABEL
+        value: Cashier_1
+      - key: KHQR_MOBILE
+        sync: false
+      - key: KHQR_MERCHANT_CATEGORY_CODE
+        value: 5999
+
+  - type: web
+    name: mart-pos-frontend
+    runtime: static
+    plan: free
+    region: singapore
+    rootDir: frontend
+    buildCommand: node render-build.js
+    staticPublishPath: public
+    autoDeployTrigger: commit
+    envVars:
+      - key: BACKEND_URL
+        value: https://mart-pos-backend.onrender.com

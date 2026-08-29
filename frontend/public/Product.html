@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="runtime-config.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Products - Mart Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <link rel="stylesheet" href="css/pages/Product.css">
+</head>
+<body data-page="products">
+
+<div class="sidebar" id="sidebar">
+  <div class="logo"><i class="fas fa-store"></i><span>Mart Dashboard</span></div>
+  <ul>
+    <li onclick="go('Dashboard-page.html')"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+    <li onclick="go('POS.html')"><i class="fas fa-cash-register"></i> POS</li>
+    <li onclick="go('LowStock.html')"><i class="fas fa-box"></i> Low Stock</li>
+    <li onclick="go('ReceiptHistory.html')"><i class="fas fa-file-invoice"></i> Receipt History</li>
+    <li class="active"><i class="fas fa-boxes"></i> Products</li>
+    <li onclick="go('ProductCategory.html')"><i class="fas fa-tags"></i> Category</li>
+    <li onclick="go('Promotions.html')"><i class="fas fa-tags"></i> Promotions</li>
+    <li onclick="go('Staff.html')"><i class="fas fa-user-cog"></i> Staff</li>
+    <li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
+  </ul>
+</div>
+
+<div class="navbar">
+  <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+      <i class="fas fa-home"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+      <i class="fas fa-user"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" aria-label="Settings">
+      <i class="fas fa-cog"></i>
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <h2>Product Management</h2>
+  <br>
+  <div id="roleNote" class="role-note">Standard users can add products, but only Admin can edit or delete them.</div>
+  <div class="topbar">
+    <div class="search">
+      <i class="fas fa-search"></i>
+      <input id="searchInput" placeholder="Search by code / name / description / category..." oninput="renderProducts()">
+    </div>
+    <button class="btn" onclick="openModalForAdd()"><i class="fas fa-plus"></i> Add Product</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="col-image">Image</th>
+        <th>Code</th>
+        <th>Name</th>
+        <th class="col-category">CategoryID</th>
+        <th class="col-category-name">Category Name</th>
+        <th>Description</th>
+        <th>Stock</th>
+        <th>Buy Price</th>
+        <th>Sale Price</th>
+        <th class="col-action">Action</th>
+      </tr>
+    </thead>
+    <tbody id="productTable">
+      <tr><td colspan="10">Loading...</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">Low Stock = less than 20</div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalTitle">Add Product</h3>
+      <div class="modal-close" onclick="closeModal()">&times;</div>
+    </div>
+
+    <div class="form-grid">
+      <div>
+        <label>Product Code</label>
+        <input id="productCode" placeholder="P1001">
+      </div>
+      <div>
+        <label>Product Name</label>
+        <input id="productName" placeholder="Water">
+      </div>
+
+      <div>
+        <label>Select Category (from DB)</label>
+        <select id="categorySelect" aria-label="Product category" onchange="onSelectCategory()">
+          <option value="">-- Select Category --</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Type Category ID</label>
+        <input id="categoryID" placeholder="C001" oninput="onTypeCategoryID()">
+      </div>
+
+      <div>
+        <label>Category Name</label>
+        <input id="categoryName" placeholder="Water / Drink / Snack...">
+      </div>
+
+      <div>
+        <label>Category Description (for auto add)</label>
+        <input id="categoryDesc" placeholder="Example: Vital 500ml / Oreo / Shampoo...">
+      </div>
+
+      <div class="hint">
+        If Category ID is new, it will auto create Category (Category Name + Description) and appear in ProductCategory page.
+      </div>
+
+      <div>
+        <label>Product Description</label>
+        <input id="description" placeholder="Vital 500ml">
+      </div>
+
+      <div class="form-full">
+        <label for="imageFile">Upload Image (choose file)</label>
+        <input id="imageFile" type="file" accept="image/*">
+
+        <div class="img-preview">
+          <img id="previewImg" src="/image/1772787358629-VitalWater-1024x1024.png" alt="preview"
+               onerror="this.src='/image/1772787358629-VitalWater-1024x1024.png'">
+          <div>
+            <div class="help">
+              Image will upload to <b>/public/image</b> automatically.<br>
+              Saved in DB as: <b>/image/filename.png</b>
+            </div>
+          </div>
+        </div>
+
+        <input id="image" type="hidden">
+      </div>
+
+      <div>
+        <label>Stock</label>
+        <input id="stockInput" type="number" placeholder="50">
+      </div>
+      <div>
+        <label>Buy Price</label>
+        <input id="buyPrice" type="number" step="0.01" placeholder="0.5">
+      </div>
+      <div>
+        <label>Sale Price</label>
+        <input id="salePrice" type="number" step="0.01" placeholder="1">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn gray" onclick="closeModal()">Cancel</button>
+      <button class="btn" id="saveBtn" onclick="saveProduct()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared-sidebar.js"></script>
+<script>
+const modalTitle = document.getElementById("modalTitle");
+const saveBtn = document.getElementById("saveBtn");
+const productCode = document.getElementById("productCode");
+const productName = document.getElementById("productName");
+const categorySelect = document.getElementById("categorySelect");
+const categoryID = document.getElementById("categoryID");
+const categoryName = document.getElementById("categoryName");
+const categoryDesc = document.getElementById("categoryDesc");
+const description = document.getElementById("description");
+const stockInput = document.getElementById("stockInput");
+const buyPrice = document.getElementById("buyPrice");
+const salePrice = document.getElementById("salePrice");
+const modal = document.getElementById("modal");
+
+function toggleSidebar(){
+  const sidebar = document.getElementById("sidebar");
+  const navbar = document.querySelector(".navbar");
+  const main = document.querySelector(".main");
+
+  if(window.innerWidth <= 768){
+    sidebar.classList.toggle("open");
+    return;
+  }
+
+  sidebar.classList.toggle("closed");
+  navbar.classList.toggle("full");
+  main.classList.toggle("full");
+}
+function go(page){ window.location.href = page; }
+function logout(){ window.location.href = "login.html"; }
+
+const FALLBACK_IMG = "/image/1772787358629-VitalWater-1024x1024.png";
+
+let ALL_PRODUCTS = [];
+let ALL_CATEGORIES = [];
+let EDITING_ID = null;
+let CURRENT_USER = null;
+let IS_ADMIN = false;
+
+function getNextProductCode(){
+  const fallback = "P1001";
+  const matchedCodes = ALL_PRODUCTS
+    .map(p => String(p.productCode || "").trim())
+    .map(code => {
+      const match = code.match(/^([A-Za-z]+)(\d+)$/);
+      if(!match) return null;
+      return {
+        raw: code,
+        prefix: match[1],
+        digits: match[2],
+        number: Number(match[2])
+      };
+    })
+    .filter(item => item && Number.isFinite(item.number));
+
+  if(matchedCodes.length === 0){
+    return fallback;
+  }
+
+  matchedCodes.sort((a, b) => b.number - a.number || b.digits.length - a.digits.length);
+  const top = matchedCodes[0];
+  const nextNumber = String(top.number + 1).padStart(top.digits.length, "0");
+  return `${top.prefix}${nextNumber}`;
+}
+
+document.getElementById("imageFile").addEventListener("change", (e) => {
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  document.getElementById("previewImg").src = url;
+});
+
+function guardLoginAndRole(){
+  const raw = localStorage.getItem("martUser");
+  if(!raw){
+    window.location.href = "login.html";
+    return false;
+  }
+
+  try{
+    CURRENT_USER = JSON.parse(raw);
+  }catch{
+    localStorage.removeItem("martUser");
+    window.location.href = "login.html";
+    return false;
+  }
+
+  IS_ADMIN = String(CURRENT_USER.role || "User").toLowerCase() === "admin";
+  const roleNote = document.getElementById("roleNote");
+  if(roleNote) roleNote.style.display = IS_ADMIN ? "none" : "block";
+  return true;
+}
+
+async function loadCategories(){
+  try{
+    const res = await fetch("/api/categories", { cache:"no-store" });
+    const data = await res.json();
+    ALL_CATEGORIES = data.categories || [];
+
+    const select = document.getElementById("categorySelect");
+    select.innerHTML = `<option value="">-- Select Category --</option>`;
+
+    const map = new Map();
+    ALL_CATEGORIES.forEach(c => {
+      const id = (c.categoryID || "").trim();
+      if(!id) return;
+      if(!map.has(id)){
+        map.set(id, {
+          categoryID: id,
+          categoryName: (c.categoryName || "").trim(),
+          description: (c.description || "").trim()
+        });
+      }
+    });
+
+    Array.from(map.values()).forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.categoryID;
+      opt.textContent = `${c.categoryID} - ${c.categoryName || ""}`;
+      opt.dataset.name = c.categoryName || "";
+      opt.dataset.desc = c.description || "";
+      select.appendChild(opt);
+    });
+
+  }catch(err){
+    console.log("Category load error", err);
+  }
+}
+
+function onSelectCategory(){
+  const sel = document.getElementById("categorySelect");
+  const id = sel.value || "";
+
+  document.getElementById("categoryID").value = id;
+
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById("categoryName").value = (opt?.dataset?.name || "");
+  document.getElementById("categoryDesc").value = (opt?.dataset?.desc || "");
+}
+
+function onTypeCategoryID(){
+  const id = (document.getElementById("categoryID").value || "").trim().toUpperCase();
+  document.getElementById("categoryID").value = id;
+
+  const sel = document.getElementById("categorySelect");
+  const match = Array.from(sel.options).find(o => o.value === id);
+
+  if(match){
+    sel.value = id;
+    document.getElementById("categoryName").value = match.dataset.name || "";
+    document.getElementById("categoryDesc").value = match.dataset.desc || "";
+  }else{
+    sel.value = "";
+  }
+}
+
+async function loadProducts(){
+  const table = document.getElementById("productTable");
+  try{
+    const res = await fetch("/api/products", { cache:"no-store" });
+    const data = await res.json();
+    ALL_PRODUCTS = data.products || [];
+    renderProducts();
+  }catch{
+    table.innerHTML = "<tr><td colspan='10'>Error loading products</td></tr>";
+  }
+}
+
+function renderProducts(){
+  const table = document.getElementById("productTable");
+  const q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+
+  let list = ALL_PRODUCTS;
+  if(q){
+    list = list.filter(p =>
+      String(p.productCode||"").toLowerCase().includes(q) ||
+      String(p.productName||"").toLowerCase().includes(q) ||
+      String(p.description||"").toLowerCase().includes(q) ||
+      String(p.categoryID||"").toLowerCase().includes(q) ||
+      String(p.categoryName||"").toLowerCase().includes(q)
+    );
+  }
+
+  if(list.length === 0){
+    table.innerHTML = "<tr><td colspan='10'>No products found</td></tr>";
+    return;
+  }
+
+  table.innerHTML = list.map(p => {
+    const stock = Number(p.stock ?? 0);
+    const badgeClass = stock < 20 ? "lowstock" : "instock";
+    const img = (p.image || "").trim() || FALLBACK_IMG;
+
+    return `
+      <tr>
+        <td><div class="img-cell"><img src="${img}" onerror="this.src='${FALLBACK_IMG}'"></div></td>
+        <td>${p.productCode ?? ""}</td>
+        <td>${p.productName ?? ""}</td>
+        <td>${p.categoryID ?? ""}</td>
+        <td>${p.categoryName ?? ""}</td>
+        <td>${p.description ?? ""}</td>
+        <td><span class="badge ${badgeClass}">${stock}</span></td>
+        <td>$${Number(p.buyPrice ?? 0)}</td>
+        <td>$${Number(p.salePrice ?? 0)}</td>
+        <td>${IS_ADMIN ? `
+          <button class="btn small" onclick="openModalForEdit('${p.productCode}')"><i class="fas fa-pen"></i> Edit</button>
+          <button class="btn small red" onclick="deleteProduct('${p.productCode}')"><i class="fas fa-trash"></i> Delete</button>
+        ` : `<span style="color:#777;">Admin only</span>`}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function openModalForAdd(){
+  EDITING_ID = null;
+  modalTitle.textContent = "Add Product";
+  saveBtn.textContent = "Save";
+
+  productCode.value = getNextProductCode();
+  productName.value = "";
+  categorySelect.value = "";
+  categoryID.value = "";
+  categoryName.value = "";
+  categoryDesc.value = "";
+  description.value = "";
+  stockInput.value = "";
+  buyPrice.value = "";
+  salePrice.value = "";
+
+  document.getElementById("image").value = "";
+  document.getElementById("imageFile").value = "";
+  document.getElementById("previewImg").src = FALLBACK_IMG;
+
+  productCode.disabled = false;
+  modal.classList.add("show");
+}
+
+function openModalForEdit(code){
+  if(!IS_ADMIN){
+    alert("Only Admin can edit products.");
+    return;
+  }
+  const p = ALL_PRODUCTS.find(x => x.productCode === code);
+  if(!p) return;
+
+  EDITING_ID = code;
+  modalTitle.textContent = "Edit Product";
+  saveBtn.textContent = "Update";
+
+  productCode.value = p.productCode ?? "";
+  productName.value = p.productName ?? "";
+  categoryID.value = p.categoryID ?? "";
+  description.value = p.description ?? "";
+  stockInput.value = p.stock ?? 0;
+  buyPrice.value = p.buyPrice ?? 0;
+  salePrice.value = p.salePrice ?? 0;
+
+  onTypeCategoryID();
+  if(p.categoryName && !categoryName.value) categoryName.value = p.categoryName;
+
+  document.getElementById("image").value = p.image ?? "";
+  document.getElementById("imageFile").value = "";
+  document.getElementById("previewImg").src = (p.image || "").trim() || FALLBACK_IMG;
+
+  productCode.disabled = false;
+  modal.classList.add("show");
+}
+
+function closeModal(){ modal.classList.remove("show"); }
+
+async function uploadImageIfAny(){
+  const fileInput = document.getElementById("imageFile");
+  if(!fileInput.files || !fileInput.files[0]) return null;
+
+  const formData = new FormData();
+  formData.append("image", fileInput.files[0]);
+
+  const res = await fetch("/api/upload", { method:"POST", body: formData });
+  if(!res.ok) throw new Error("Upload failed");
+  const data = await res.json();
+  return data.imageUrl;
+}
+
+async function saveProduct(){
+  try{
+    const uploadedUrl = await uploadImageIfAny();
+    if(uploadedUrl) document.getElementById("image").value = uploadedUrl;
+
+    const payload = {
+      productCode: productCode.value.trim(),
+      productName: productName.value.trim(),
+      categoryID: categoryID.value.trim(),
+      categoryName: categoryName.value.trim(),
+      categoryDesc: categoryDesc.value.trim(),
+      description: description.value.trim(),
+      image: document.getElementById("image").value.trim(),
+      stock: Number(stockInput.value || 0),
+      buyPrice: Number(buyPrice.value || 0),
+      salePrice: Number(salePrice.value || 0),
+    };
+
+    if(!payload.productCode || !payload.productName){
+      alert("Product Code and Product Name are required!");
+      return;
+    }
+
+    if(!payload.categoryID){
+      alert("Category ID is required!");
+      return;
+    }
+
+    if(payload.buyPrice > payload.salePrice){
+      alert("Buy Price cannot be greater than Sale Price!");
+      return;
+    }
+
+    if(!payload.categoryName){
+      const exists = ALL_CATEGORIES.some(c => (c.categoryID || "").trim() === payload.categoryID);
+      if(!exists){
+        alert("New Category ID detected. Please type Category Name.");
+        return;
+      }
+    }
+
+    let res;
+    if(EDITING_ID){
+      res = await fetch(`/api/products/${EDITING_ID}`, {
+        method:"PUT",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+    }else{
+      res = await fetch(`/api/products`, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    if(!res.ok){
+      const t = await res.text();
+      return alert("Save failed: " + t);
+    }
+
+    closeModal();
+    await loadProducts();
+    await loadCategories();
+
+  }catch(err){
+    alert("Error: " + err.message);
+  }
+}
+
+async function deleteProduct(code){
+  if(!IS_ADMIN){
+    alert("Only Admin can delete products.");
+    return;
+  }
+  if(!confirm("Delete this product?")) return;
+  try{
+    const res = await fetch(`/api/products/${code}`, { method:"DELETE" });
+    if(!res.ok) return alert("Delete failed");
+    await loadProducts();
+  }catch{
+    alert("Error deleting product");
+  }
+}
+
+if(guardLoginAndRole()){
+  loadCategories();
+  loadProducts();
+}
+</script>
+
+</body>
+</html>

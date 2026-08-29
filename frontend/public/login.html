@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="runtime-config.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Mart Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<link rel="stylesheet" href="css/pages/login.css">
+</head>
+<body>
+
+<div class="page">
+  <section class="brand-panel">
+    <div>
+      <div class="side-chip left"><i class="fas fa-shield-halved"></i> Secure Access</div>
+      <h1 class="side-title left">Welcome back to store control.</h1>
+      <p class="side-text left">
+        Sign in to manage inventory, review receipt history, and keep daily store operations organized.
+      </p>
+
+      <div class="brand-points">
+        <div class="point">
+          <i class="fas fa-boxes-stacked"></i>
+          <strong>Inventory Control</strong>
+          <span>Manage product stock, categories, pricing, and low-stock visibility from one place.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-footer">Internal use only. Authorized employees only.</div>
+  </section>
+
+  <main class="login-panel">
+    <div class="login-card">
+      <div class="card-top">
+        <div class="badge">
+          <i class="fas fa-lock"></i>
+          <span>Secure Sign In</span>
+        </div>
+        <a class="home-link" href="/index.html" title="Back to home">
+          <i class="fas fa-house"></i>
+        </a>
+      </div>
+
+      <h2>Mart POS</h2>
+      <p class="subtitle">Enter your username and password to access the mart management dashboard.</p>
+
+      <div class="form">
+        <div class="field">
+          <div class="field-head">
+            <label for="user">Username</label>
+            <span class="field-hint">Use your assigned account</span>
+          </div>
+          <div class="input-wrap">
+            <i class="fas fa-user icon-left"></i>
+            <input type="text" id="user" placeholder="Enter username" autocomplete="username">
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <label for="pass">Password</label>
+            <span class="field-hint">Case-sensitive</span>
+          </div>
+          <div class="input-wrap">
+            <i class="fas fa-key icon-left"></i>
+            <input type="password" id="pass" placeholder="Enter password" autocomplete="current-password">
+            <button class="toggle-pass" type="button" onclick="togglePassword()" aria-label="Show password">
+              <i class="fas fa-eye" id="togglePassIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="forgot-row">
+          <a href="#">Forgot Password?</a>
+        </div>
+
+        <div class="actions">
+          <button type="button" onclick="login()">Sign In</button>
+        </div>
+      </div>
+
+      <div class="error" id="errorBox"></div>
+
+      <div class="helper">
+        <strong>Access note:</strong> If your login fails, check your username and password first before trying again.
+      </div>
+
+      <div class="social-links">
+        <a class="facebook" href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+          <i class="fab fa-facebook-f"></i>
+        </a>
+        <a class="telegram" href="https://t.me" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+          <i class="fab fa-telegram-plane"></i>
+        </a>
+        <a class="youtube" href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+          <i class="fab fa-youtube"></i>
+        </a>
+        <a class="gmail" href="mailto:martpos@example.com" aria-label="Gmail">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <section class="brand-panel right">
+    <div>
+      <div class="side-chip right"><i class="fas fa-chart-line"></i> Daily Overview</div>
+      <h1 class="side-title right">Track sales and receipts faster.</h1>
+      <p class="side-text right">
+        Monitor POS activity, review invoices, and keep the team aligned from one dashboard.
+      </p>
+
+      <div class="brand-points">
+        <div class="point">
+          <i class="fas fa-receipt"></i>
+          <strong>Sales Monitoring</strong>
+          <span>Track invoices, receipts, POS activity, and revenue updates throughout the day.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-footer">Mart Dashboard employee sign in.</div>
+  </section>
+</div>
+
+<script>
+function showError(msg){
+  const box = document.getElementById("errorBox");
+  box.textContent = msg || "";
+  box.classList.toggle("has-error", Boolean(msg));
+}
+
+function togglePassword(){
+  const pass = document.getElementById("pass");
+  const icon = document.getElementById("togglePassIcon");
+  const isPassword = pass.type === "password";
+  pass.type = isPassword ? "text" : "password";
+  icon.className = isPassword ? "fas fa-eye-slash" : "fas fa-eye";
+}
+
+async function login(){
+  const username = document.getElementById("user").value.trim();
+  const password = document.getElementById("pass").value.trim();
+
+  showError("");
+
+  if(!username || !password){
+    showError("Enter username and password");
+    return;
+  }
+
+  try{
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if(!res.ok){
+      showError(data.message || "Login failed");
+      return;
+    }
+
+    localStorage.setItem("martUser", JSON.stringify(data.user));
+    window.location.href = "/Dashboard-page.html";
+  }catch(err){
+    showError("Server error");
+  }
+}
+
+document.getElementById("pass").addEventListener("keydown", function(e){
+  if(e.key === "Enter") login();
+});
+
+document.getElementById("user").addEventListener("keydown", function(e){
+  if(e.key === "Enter") login();
+});
+</script>
+
+</body>
+</html>

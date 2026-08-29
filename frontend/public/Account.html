@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="runtime-config.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Accounts - Mart Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/pages/Account.css">
+</head>
+<body data-page="account">
+
+<div class="sidebar" id="sidebar"></div>
+
+<div class="navbar">
+  <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+      <i class="fas fa-home"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+      <i class="fas fa-user"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" aria-label="Settings">
+      <i class="fas fa-cog"></i>
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <h2>Account Management</h2>
+
+  <div class="topbar">
+    <div class="search">
+      <i class="fas fa-search"></i>
+      <input id="q" name="account_search_fresh" placeholder="Search by username / full name / role..." oninput="render()" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="topbar-actions">
+      <button class="btn" id="addAccountBtn" onclick="openAdd()"><i class="fas fa-plus"></i> Add Account</button>
+      <button class="btn gray" onclick="load()">Reload</button>
+    </div>
+  </div>
+
+  <div id="roleNote" class="role-note">Only Admin can add, edit, or delete accounts.</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Password</th>
+        <th class="col-role">Role</th>
+        <th class="col-employee">Employee No</th>
+        <th>Full Name</th>
+        <th class="col-status">Status</th>
+        <th class="col-action">Action</th>
+      </tr>
+    </thead>
+    <tbody id="tb">
+      <tr><td colspan="7">Loading...</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">API: <code>/api/accounts</code> | Collection: <b>Mart_user</b></div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalTitle">Add Account</h3>
+      <div class="modal-close" onclick="closeModal()">&times;</div>
+    </div>
+
+    <div class="form-grid">
+      <div>
+        <label>Username</label>
+        <input id="username" placeholder="admin01">
+      </div>
+      <div>
+        <label>Password</label>
+        <input id="password" placeholder="Enter password or leave blank to keep current">
+      </div>
+      <div>
+        <label>Full Name</label>
+        <input id="fullName" placeholder="John Doe">
+      </div>
+      <div>
+        <label>Employee Number</label>
+        <input id="employeeNumber" type="number" placeholder="1001" list="employeeNumberList">
+        <datalist id="employeeNumberList"></datalist>
+      </div>
+      <div>
+        <label>Phone Number</label>
+        <input id="phoneNumber" placeholder="012345678">
+      </div>
+      <div>
+        <label>Role</label>
+        <select id="role" aria-label="Account role">
+          <option value="Admin">Admin</option>
+          <option value="User">User</option>
+        </select>
+      </div>
+      <div>
+        <label>Status</label>
+        <select id="status" aria-label="Account status">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn gray" onclick="closeModal()">Cancel</button>
+      <button class="btn" id="saveBtn" onclick="saveAccount()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="passwordModal">
+  <div class="modal-box password-modal-box">
+    <div class="modal-head">
+      <h3>Change Password</h3>
+      <div class="modal-close" onclick="closePasswordModal()">&times;</div>
+    </div>
+
+    <div class="form-grid password-form-grid">
+      <div>
+        <label>Current Password</label>
+        <input id="currentPassword" type="password" placeholder="Enter current password">
+      </div>
+      <div>
+        <label>New Password</label>
+        <input id="newPassword" type="password" placeholder="Enter new password">
+      </div>
+      <div>
+        <label>Confirm New Password</label>
+        <input id="confirmPassword" type="password" placeholder="Confirm new password">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn gray" onclick="closePasswordModal()">Cancel</button>
+      <button class="btn" onclick="changeOwnPassword()">Update Password</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared-sidebar.js"></script>
+<script>
+const modalTitle = document.getElementById("modalTitle");
+const saveBtn = document.getElementById("saveBtn");
+const username = document.getElementById("username");
+const password = document.getElementById("password");
+const fullName = document.getElementById("fullName");
+const employeeNumber = document.getElementById("employeeNumber");
+const phoneNumber = document.getElementById("phoneNumber");
+const role = document.getElementById("role");
+const status = document.getElementById("status");
+const modal = document.getElementById("modal");
+
+function toggleSidebar(){
+  const sidebar = document.getElementById("sidebar");
+  const navbar = document.querySelector(".navbar");
+  const main = document.querySelector(".main");
+
+  if(window.innerWidth <= 768){
+    sidebar.classList.toggle("open");
+    return;
+  }
+
+  sidebar.classList.toggle("closed");
+  navbar.classList.toggle("full");
+  main.classList.toggle("full");
+}
+
+function go(p){ window.location.href = p; }
+
+function resetSearchBox(){
+  const searchInput = document.getElementById("q");
+  if(!searchInput) return;
+  searchInput.value = "";
+  searchInput.setAttribute("value", "");
+}
+
+let ALL = [];
+let ALL_EMPLOYEES = [];
+let EDITING_USERNAME = null;
+let CURRENT_USER = null;
+let IS_ADMIN = false;
+let CHANGING_PASSWORD_USERNAME = null;
+
+function guardLoginAndRole(){
+  const raw = localStorage.getItem("martUser");
+  if(!raw){
+    window.location.href = "login.html";
+    return false;
+  }
+
+  try{
+    CURRENT_USER = JSON.parse(raw);
+  }catch{
+    localStorage.removeItem("martUser");
+    window.location.href = "login.html";
+    return false;
+  }
+
+  IS_ADMIN = String(CURRENT_USER.role || "User").toLowerCase() === "admin";
+  if(!IS_ADMIN){
+    alert("Only Admin can access Account page.");
+    window.location.href = "Dashboard-page.html";
+    return false;
+  }
+  const addBtn = document.getElementById("addAccountBtn");
+  const roleNote = document.getElementById("roleNote");
+  if(addBtn) addBtn.style.display = IS_ADMIN ? "" : "none";
+  if(roleNote) roleNote.style.display = IS_ADMIN ? "none" : "block";
+  return true;
+}
+
+async function load(){
+  const tb = document.getElementById("tb");
+  tb.innerHTML = "<tr><td colspan='7'>Loading...</td></tr>";
+
+  try{
+    const res = await fetch("/api/accounts", { cache:"no-store" });
+    const data = await res.json();
+    if(!res.ok){
+      tb.innerHTML = `<tr><td colspan="7">${data.message || "Failed to load accounts"}</td></tr>`;
+      return;
+    }
+    ALL = data.accounts || [];
+    render();
+  }catch(err){
+    tb.innerHTML = "<tr><td colspan='7'>Error loading accounts</td></tr>";
+  }
+}
+
+async function loadEmployees(){
+  try{
+    const res = await fetch("/api/employees", { cache:"no-store" });
+    if(!res.ok) return;
+
+    const data = await res.json().catch(() => ({ employees: [] }));
+    ALL_EMPLOYEES = Array.isArray(data.employees) ? data.employees : [];
+    renderEmployeeNumberOptions();
+    syncAccountFieldsFromEmployeeNumber();
+  }catch(err){
+    console.error("Error loading employees", err);
+  }
+}
+
+function renderEmployeeNumberOptions(){
+  const list = document.getElementById("employeeNumberList");
+  if(!list) return;
+
+  list.innerHTML = ALL_EMPLOYEES.map(e => {
+    const employeeNo = String(e.employeeNumber ?? "").trim();
+    const fullName = `${String(e.firstName || "").trim()} ${String(e.lastName || "").trim()}`.trim();
+    const label = fullName ? `${employeeNo} - ${fullName}` : employeeNo;
+    return `<option value="${employeeNo}">${label}</option>`;
+  }).join("");
+}
+
+function syncAccountFieldsFromEmployeeNumber(){
+  const employeeNo = String(employeeNumber.value || "").trim();
+
+  if(!employeeNo){
+    return;
+  }
+
+  const matchedEmployee = ALL_EMPLOYEES.find(e =>
+    String(e.employeeNumber ?? "").trim() === employeeNo
+  );
+
+  if(!matchedEmployee){
+    return;
+  }
+
+  const firstName = String(matchedEmployee.firstName || "").trim();
+  const lastName = String(matchedEmployee.lastName || "").trim();
+  const fullNameValue = `${firstName} ${lastName}`.trim();
+  const phoneValue = String(matchedEmployee.phoneNumber || "").trim();
+
+  if(fullNameValue){
+    fullName.value = fullNameValue;
+  }
+
+  if(phoneValue){
+    phoneNumber.value = phoneValue;
+  }
+}
+
+function render(){
+  const tb = document.getElementById("tb");
+  const q = (document.getElementById("q").value || "").toLowerCase().trim();
+
+  let list = ALL;
+  if(q){
+    list = list.filter(a =>
+      String(a.username || "").toLowerCase().includes(q) ||
+      String(a.fullName || "").toLowerCase().includes(q) ||
+      String(a.role || "").toLowerCase().includes(q) ||
+      String(a.status || "").toLowerCase().includes(q)
+    );
+  }
+
+  if(list.length === 0){
+    tb.innerHTML = "<tr><td colspan='7'>No accounts found</td></tr>";
+    return;
+  }
+
+  tb.innerHTML = list.map(a => {
+    const safeUsername = String(a.username || "").replace(/'/g, "\\'");
+    const canChangeOwnPassword = String(a.username || "") === String(CURRENT_USER?.username || "");
+    const passwordText = "••••••";
+
+    return `
+      <tr>
+        <td>${a.username || ""}</td>
+        <td>${passwordText}</td>
+        <td>${a.role || "User"}</td>
+        <td>${a.employeeNumber ?? ""}</td>
+        <td>${a.fullName || ""}</td>
+        <td>
+          <span class="status-badge ${String(a.status || "").toLowerCase() === "active" ? "status-active" : "status-inactive"}">
+            ${a.status || ""}
+          </span>
+        </td>
+        <td>${IS_ADMIN ? `
+          <button class="btn small" onclick="openEdit('${safeUsername}')"><i class="fas fa-pen"></i> Edit</button>
+          <button class="btn small red" onclick="deleteAccount('${safeUsername}')"><i class="fas fa-trash"></i> Delete</button>
+        ` : (canChangeOwnPassword ? `
+          <button class="btn small gray" onclick="openChangePassword('${safeUsername}')"><i class="fas fa-key"></i> Change</button>
+        ` : `<span style="color:#777;">Admin only</span>`)}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function openChangePassword(accountUsername){
+  if(String(accountUsername || "") !== String(CURRENT_USER?.username || "") && !IS_ADMIN){
+    alert("You can only change your own password.");
+    return;
+  }
+
+  CHANGING_PASSWORD_USERNAME = String(accountUsername || "");
+  document.getElementById("currentPassword").value = "";
+  document.getElementById("newPassword").value = "";
+  document.getElementById("confirmPassword").value = "";
+  document.getElementById("passwordModal").classList.add("show");
+}
+
+function closePasswordModal(){
+  document.getElementById("passwordModal").classList.remove("show");
+}
+
+async function changeOwnPassword(){
+  const currentPassword = document.getElementById("currentPassword").value.trim();
+  const newPassword = document.getElementById("newPassword").value.trim();
+  const confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+  if(!CHANGING_PASSWORD_USERNAME){
+    return;
+  }
+
+  if(!currentPassword || !newPassword || !confirmPassword){
+    alert("Please fill all password fields.");
+    return;
+  }
+
+  if(newPassword !== confirmPassword){
+    alert("New password and confirm password do not match.");
+    return;
+  }
+
+  try{
+    const res = await fetch(`/api/accounts/${encodeURIComponent(CHANGING_PASSWORD_USERNAME)}/password`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok){
+      alert(data.message || "Failed to change password");
+      return;
+    }
+
+    closePasswordModal();
+    await load();
+    alert("Password changed successfully.");
+  }catch(err){
+    alert("Error changing password");
+  }
+}
+
+function openAdd(){
+  if(!IS_ADMIN){
+    alert("Only Admin can add accounts.");
+    return;
+  }
+  EDITING_USERNAME = null;
+  modalTitle.textContent = "Add Account";
+  saveBtn.textContent = "Save";
+  username.disabled = false;
+  username.value = "";
+  password.value = "";
+  fullName.value = "";
+  employeeNumber.value = "";
+  phoneNumber.value = "";
+  role.value = "User";
+  status.value = "Active";
+  modal.classList.add("show");
+}
+
+function openEdit(accountUsername){
+  if(!IS_ADMIN){
+    alert("Only Admin can edit accounts.");
+    return;
+  }
+  const account = ALL.find(x => String(x.username) === String(accountUsername));
+  if(!account) return;
+
+  EDITING_USERNAME = String(accountUsername);
+  modalTitle.textContent = "Edit Account";
+  saveBtn.textContent = "Update";
+  username.disabled = false;
+  username.value = account.username || "";
+  password.value = "";
+  password.placeholder = "Leave blank to keep current password";
+  fullName.value = account.fullName || "";
+  employeeNumber.value = account.employeeNumber ?? "";
+  phoneNumber.value = account.phoneNumber || "";
+  role.value = account.role || "User";
+  status.value = account.status || "Active";
+  modal.classList.add("show");
+  syncAccountFieldsFromEmployeeNumber();
+}
+
+function closeModal(){
+  modal.classList.remove("show");
+}
+
+async function saveAccount(){
+  if(!IS_ADMIN){
+    alert("Only Admin can save accounts.");
+    return;
+  }
+
+  const payload = {
+    username: username.value.trim(),
+    password: password.value.trim(),
+    fullName: fullName.value.trim(),
+    employeeNumber: employeeNumber.value.trim(),
+    phoneNumber: phoneNumber.value.trim(),
+    role: role.value,
+    status: status.value
+  };
+
+  if(!payload.username){
+    alert("Username is required.");
+    return;
+  }
+
+  if(!EDITING_USERNAME && !payload.password){
+    alert("Username and password are required.");
+    return;
+  }
+
+  try{
+    const target = EDITING_USERNAME
+      ? `/api/accounts/${encodeURIComponent(EDITING_USERNAME)}`
+      : "/api/accounts";
+    const method = EDITING_USERNAME ? "PUT" : "POST";
+
+    const res = await fetch(target, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok){
+      alert(data.message || "Save failed");
+      return;
+    }
+
+    if(EDITING_USERNAME && String(CURRENT_USER?.username || "") === String(EDITING_USERNAME)){
+      CURRENT_USER.username = payload.username;
+      CURRENT_USER.fullName = payload.fullName;
+      localStorage.setItem("martUser", JSON.stringify(CURRENT_USER));
+    }
+
+    closeModal();
+    await load();
+  }catch(err){
+    alert("Error saving account");
+  }
+}
+
+async function deleteAccount(accountUsername){
+  if(!IS_ADMIN){
+    alert("Only Admin can delete accounts.");
+    return;
+  }
+  if(!confirm("Delete this account?")) return;
+
+  try{
+    const res = await fetch(`/api/accounts/${encodeURIComponent(accountUsername)}`, {
+      method: "DELETE"
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok){
+      alert(data.message || "Delete failed");
+      return;
+    }
+    await load();
+  }catch(err){
+    alert("Error deleting account");
+  }
+}
+
+if(guardLoginAndRole()){
+  employeeNumber.addEventListener("input", syncAccountFieldsFromEmployeeNumber);
+  employeeNumber.addEventListener("change", syncAccountFieldsFromEmployeeNumber);
+  resetSearchBox();
+  loadEmployees();
+  load();
+}
+
+window.addEventListener("pageshow", () => {
+  resetSearchBox();
+  setTimeout(resetSearchBox, 0);
+  setTimeout(resetSearchBox, 120);
+});
+
+window.addEventListener("beforeunload", resetSearchBox);
+</script>
+</body>
+</html>
