@@ -4,7 +4,7 @@
   "main": "backend/src/server.js",
   "scripts": {
     "start": "node server.js",
-    "start:backend": "node backend/src/server.js",
+    "start:backend": "node backend/src/bootstrap.js",
     "start:frontend": "node frontend/server.js",
     "check": "node --check backend/src/server.js && node --check backend/src/services/realtime.js"
   },
