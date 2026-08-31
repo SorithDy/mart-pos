@@ -9,7 +9,14 @@ const config = `window.__MART_CONFIG__ = {
 };
 `;
 
-fs.writeFileSync(path.join(__dirname, "public", "runtime-config.js"), config, "utf8");
+const runtimeConfigPath = path.join(__dirname, "public", "runtime-config.js");
+const runtimeTemplate = fs.readFileSync(runtimeConfigPath, "utf8");
+const runtimeConfig = runtimeTemplate.replace(
+  /window\.__MART_CONFIG__\s*=\s*\{[\s\S]*?\};/,
+  config.trim()
+);
+
+fs.writeFileSync(runtimeConfigPath, runtimeConfig, "utf8");
 
 // Prevent browsers and the CDN from reusing a runtime config from an older deploy.
 const cacheVersion = Date.now().toString();
