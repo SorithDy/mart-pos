@@ -12,7 +12,7 @@ const config = `window.__MART_CONFIG__ = {
 const runtimeConfigPath = path.join(__dirname, "public", "runtime-config.js");
 const runtimeTemplate = fs.readFileSync(runtimeConfigPath, "utf8");
 const runtimeConfig = runtimeTemplate.replace(
-  /window\.__MART_CONFIG__\s*=\s*\{[\s\S]*?\};/,
+  /window\.__MART_CONFIG__\s*=\s*(?:window\.__MART_CONFIG__\s*\|\|\s*)?\{[\s\S]*?\};/,
   config.trim()
 );
 
