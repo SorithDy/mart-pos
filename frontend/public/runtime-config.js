@@ -1,8 +1,8 @@
 // Edit these values when the static frontend is deployed separately.
 window.__MART_CONFIG__ = window.__MART_CONFIG__ || {
-  BACKEND_URL: "",
-  API_URL: "",
-  SOCKET_URL: ""
+  BACKEND_URL: "http://192.168.163.1:3000",
+  API_URL: "http://192.168.163.1:3000/api",
+  SOCKET_URL: "http://192.168.163.1:3000"
 };
 
 (function () {

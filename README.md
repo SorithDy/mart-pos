@@ -27,10 +27,21 @@ Mart POS/
 ```powershell
 npm install
 Copy-Item .env.example .env
-npm start
 ```
 
-The backend and current frontend are available at `http://localhost:3000`. REST endpoints use the `/api` prefix.
+Run the backend in one terminal:
+
+```powershell
+npm run start:backend
+```
+
+Run the frontend in a second terminal:
+
+```powershell
+npm run start:frontend
+```
+
+Open `http://localhost:5173`. The backend runs at `http://localhost:3000` and REST endpoints use the `/api` prefix.
 
 Set `MONGO_URL` in `.env` to your MongoDB Atlas connection string. `CORS_ORIGIN` supports comma-separated origins for a separately running frontend.
 

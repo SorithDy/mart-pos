@@ -5,14 +5,14 @@
 // + KHQR / ABA Generate + Status + Mock Paid (MongoDB)
 // ======================================================
 
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "..", "..", ".env") });
 
 const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const dns = require("dns");
-const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
 const crypto = require("crypto");
@@ -45,10 +45,11 @@ const dnsServers = String(process.env.DNS_SERVERS || "1.1.1.1,8.8.8.8")
   .filter(Boolean);
 if (dnsServers.length) dns.setServers(dnsServers);
 
-// ======================================================
-// STATIC FILES
-// ======================================================
-app.use(express.static(path.join(__dirname, "..", "..", "frontend", "public")));
+// Keep uploaded product images available when the frontend runs separately.
+app.use(
+  "/image",
+  express.static(path.join(__dirname, "..", "..", "frontend", "public", "image"))
+);
 
 // ======================================================
 // MODELS
