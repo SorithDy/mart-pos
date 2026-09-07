@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="runtime-config.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Branch - Mart Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/pages/Branch.css">
+</head>
+
+<body data-page="branch">
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar"></div>
+
+<!-- Navbar -->
+<div class="navbar" id="navbar">
+  <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Dashboard" title="Dashboard">
+      <i class="fas fa-home"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile" title="Profile">
+      <i class="fas fa-user"></i>
+    </button>
+    <button class="nav-icon-btn" type="button" onclick="go('POS.html')" aria-label="POS Terminal" title="POS Terminal">
+      <i class="fas fa-cash-register"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main" id="main">
+  <h2>Branch Management</h2>
+  <p style="color:#64748b; font-size: 0.9rem; margin-top: 4px;">Manage store branches and select active operating branch.</p>
+
+  <div class="topbar">
+    <div class="search">
+      <i class="fas fa-search" style="color: #94a3b8;"></i>
+      <input type="text" id="searchInput" placeholder="Search branch code / name / address..." oninput="renderTable()">
+    </div>
+    <button class="btn" onclick="openAddModal()">
+      <i class="fas fa-plus"></i> Add Branch
+    </button>
+  </div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 100px;">Branch Code</th>
+          <th>Branch Name</th>
+          <th>Address / Location</th>
+          <th style="width: 140px;">Phone</th>
+          <th style="width: 120px;">Status</th>
+          <th style="width: 210px;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="branchTableBody">
+        <tr><td colspan="6" style="text-align:center;">Loading branches...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add / Edit Modal -->
+<div class="modal" id="branchModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalTitle">Add Branch</h3>
+      <div class="modal-close" onclick="closeModal()">&times;</div>
+    </div>
+
+    <input type="hidden" id="editIndex" value="-1">
+
+    <div class="form-group">
+      <label>Branch Code</label>
+      <input type="text" id="branchCode" placeholder="e.g. BR001">
+    </div>
+
+    <div class="form-group">
+      <label>Branch Name</label>
+      <input type="text" id="branchName" placeholder="e.g. Main Branch (Phnom Penh)">
+    </div>
+
+    <div class="form-group">
+      <label>Address / Location</label>
+      <input type="text" id="branchAddress" placeholder="e.g. Preah Monivong Blvd, Phnom Penh">
+    </div>
+
+    <div class="form-group">
+      <label>Phone Number</label>
+      <input type="text" id="branchPhone" placeholder="e.g. 023 888 999">
+    </div>
+
+    <div class="form-group">
+      <label>Status</label>
+      <select id="branchStatus">
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn gray" type="button" onclick="closeModal()">Cancel</button>
+      <button class="btn" type="button" onclick="saveBranch()"><i class="fas fa-check"></i> Save Branch</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared-sidebar.js"></script>
+<script>
+function toggleSidebar(){
+  const sidebar = document.getElementById("sidebar");
+  const navbar = document.getElementById("navbar");
+  const main = document.getElementById("main");
+
+  if(window.innerWidth <= 768){
+    sidebar.classList.toggle("open");
+    return;
+  }
+  sidebar.classList.toggle("closed");
+  navbar.classList.toggle("full");
+  main.classList.toggle("full");
+}
+
+function go(page){ window.location.href = page; }
+function logout(){
+  localStorage.removeItem("martUser");
+  window.location.href = "login.html";
+}
+
+const DEFAULT_BRANCHES = [
+  { code: "BR001", name: "Main Branch", address: "Preah Monivong Blvd, Phnom Penh", phone: "023 888 999", status: "Active" },
+  { code: "BR002", name: "Toul Kork Branch", address: "St. 289, Toul Kork, Phnom Penh", phone: "023 777 666", status: "Active" },
+  { code: "BR003", name: "BKK1 Branch", address: "St. 51, BKK1, Phnom Penh", phone: "023 555 444", status: "Active" }
+];
+
+function getBranches(){
+  try {
+    const raw = localStorage.getItem("martBranches");
+    if(!raw){
+      localStorage.setItem("martBranches", JSON.stringify(DEFAULT_BRANCHES));
+      return DEFAULT_BRANCHES;
+    }
+    return JSON.parse(raw) || DEFAULT_BRANCHES;
+  } catch {
+    return DEFAULT_BRANCHES;
+  }
+}
+
+function saveBranches(list){
+  localStorage.setItem("martBranches", JSON.stringify(list));
+}
+
+function getCurrentBranch(){
+  return localStorage.getItem("martCurrentBranch") || "Main Branch";
+}
+
+function setCurrentBranch(name){
+  localStorage.setItem("martCurrentBranch", name);
+  renderTable();
+  if(window.renderSidebar) window.renderSidebar();
+}
+
+function renderTable(){
+  const tbody = document.getElementById("branchTableBody");
+  const q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+  const current = getCurrentBranch();
+  let list = getBranches();
+
+  if(q){
+    list = list.filter(b => 
+      String(b.code || "").toLowerCase().includes(q) ||
+      String(b.name || "").toLowerCase().includes(q) ||
+      String(b.address || "").toLowerCase().includes(q) ||
+      String(b.phone || "").toLowerCase().includes(q)
+    );
+  }
+
+  if(list.length === 0){
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 28px; color: #64748b;">No branches found</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((b, idx) => {
+    const isCurrent = b.name === current;
+    const statusClass = (b.status || "Active").toLowerCase() === "active" ? "active" : "inactive";
+
+    return `
+      <tr>
+        <td><span class="code-badge">${b.code}</span></td>
+        <td>
+          <strong>${b.name}</strong>
+          ${isCurrent ? `<span class="current-tag"><i class="fas fa-check-circle"></i> Current</span>` : ''}
+        </td>
+        <td>${b.address || "—"}</td>
+        <td>${b.phone || "—"}</td>
+        <td><span class="status ${statusClass}"><i class="fas fa-circle" style="font-size: 0.55rem;"></i> ${b.status}</span></td>
+        <td>
+          <div class="action-btn-group">
+            ${!isCurrent ? `
+              <button class="btn small green" onclick="setCurrentBranch('${b.name.replace(/'/g, "\\'")}')" title="Set as active branch">
+                <i class="fas fa-check"></i> Set Active
+              </button>
+            ` : ''}
+            <button class="btn small" onclick="openEditModal(${idx})" title="Edit branch">
+              <i class="fas fa-pen"></i> Edit
+            </button>
+            <button class="btn small red" onclick="deleteBranch(${idx})" title="Delete branch">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function openAddModal(){
+  document.getElementById("modalTitle").textContent = "Add Branch";
+  document.getElementById("editIndex").value = -1;
+  const list = getBranches();
+  const nextNum = String(list.length + 1).padStart(3, "0");
+  document.getElementById("branchCode").value = "BR" + nextNum;
+  document.getElementById("branchName").value = "";
+  document.getElementById("branchAddress").value = "";
+  document.getElementById("branchPhone").value = "";
+  document.getElementById("branchStatus").value = "Active";
+  document.getElementById("branchModal").classList.add("show");
+}
+
+function openEditModal(index){
+  const list = getBranches();
+  const b = list[index];
+  if(!b) return;
+
+  document.getElementById("modalTitle").textContent = "Edit Branch";
+  document.getElementById("editIndex").value = index;
+  document.getElementById("branchCode").value = b.code || "";
+  document.getElementById("branchName").value = b.name || "";
+  document.getElementById("branchAddress").value = b.address || "";
+  document.getElementById("branchPhone").value = b.phone || "";
+  document.getElementById("branchStatus").value = b.status || "Active";
+  document.getElementById("branchModal").classList.add("show");
+}
+
+function closeModal(){
+  document.getElementById("branchModal").classList.remove("show");
+}
+
+function saveBranch(){
+  const code = (document.getElementById("branchCode").value || "").trim();
+  const name = (document.getElementById("branchName").value || "").trim();
+  const address = (document.getElementById("branchAddress").value || "").trim();
+  const phone = (document.getElementById("branchPhone").value || "").trim();
+  const status = document.getElementById("branchStatus").value;
+  const editIndex = parseInt(document.getElementById("editIndex").value, 10);
+
+  if(!name){
+    alert("Please enter a Branch Name");
+    return;
+  }
+
+  const list = getBranches();
+
+  if(editIndex >= 0 && list[editIndex]){
+    list[editIndex] = { code, name, address, phone, status };
+  } else {
+    list.push({ code, name, address, phone, status });
+  }
+
+  saveBranches(list);
+  closeModal();
+  renderTable();
+}
+
+function deleteBranch(index){
+  const list = getBranches();
+  const b = list[index];
+  if(!b) return;
+
+  if(confirm(`Are you sure you want to delete "${b.name}"?`)){
+    list.splice(index, 1);
+    saveBranches(list);
+    renderTable();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderTable();
+});
+</script>
+
+</body>
+</html>

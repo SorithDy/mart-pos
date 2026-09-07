@@ -2,21 +2,26 @@
 <html lang="en">
 <head>
   <script src="runtime-config.js"></script>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Low Stock - Mart Dashboard</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-<link rel="stylesheet" href="css/pages/LowStock.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Low Stock - Mart Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/pages/LowStock.css">
 </head>
+
 <body data-page="low-stock">
 
+<!-- Sidebar -->
 <div class="sidebar" id="sidebar">
   <div class="logo"><i class="fas fa-store"></i><span>Mart Dashboard</span></div>
   <ul>
     <li onclick="go('Dashboard-page.html')"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
     <li onclick="go('POS.html')"><i class="fas fa-cash-register"></i> POS</li>
     <li class="active"><i class="fas fa-box"></i> Low Stock</li>
-    <li onclick="go('ReceiptHistory.html')"> <i class="fas fa-file-invoice"></i> Receipt History </li>
+    <li onclick="go('ReceiptHistory.html')"><i class="fas fa-file-invoice"></i> Receipt History</li>
     <li onclick="go('Product.html')"><i class="fas fa-boxes"></i> Products</li>
     <li onclick="go('ProductCategory.html')"><i class="fas fa-tags"></i> Category</li>
     <li onclick="go('Promotions.html')"><i class="fas fa-tags"></i> Promotions</li>
@@ -25,50 +30,111 @@
   </ul>
 </div>
 
-<div class="navbar">
+<!-- Navbar -->
+<div class="navbar" id="navbar">
   <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
   <div class="nav-actions">
-    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard" title="Dashboard">
       <i class="fas fa-home"></i>
     </button>
-    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile" title="Profile">
       <i class="fas fa-user"></i>
     </button>
-    <button class="nav-icon-btn" type="button" aria-label="Settings">
-      <i class="fas fa-cog"></i>
+    <button class="nav-icon-btn" type="button" onclick="go('POS.html')" aria-label="POS Terminal" title="POS Terminal">
+      <i class="fas fa-cash-register"></i>
     </button>
   </div>
 </div>
 
-<div class="main">
+<!-- Main Content -->
+<div class="main" id="main">
   <h2>Low Stock Products</h2>
-  <p class="note">Showing products where stock &lt; 20</p>
 
-  <table>
-    <thead>
-      <tr>
-        <th class="col-image">Image</th>
-        <th>Code</th>
-        <th>Name</th>
-        <th>CategoryID</th>
-        <th>Description</th>
-        <th class="col-stock">Stock</th>
-      </tr>
-    </thead>
-    <tbody id="tb">
-      <tr><td colspan="6">Loading...</td></tr>
-    </tbody>
-  </table>
+  <div id="adminNote" class="admin-note">Standard users can view low stock, but only Admin can edit or delete products.</div>
+
+  <div class="toolbar">
+    <div class="search">
+      <i class="fas fa-search"></i>
+      <input type="text" id="searchInput" placeholder="Search product code / name / category..." oninput="handleSearch()">
+    </div>
+    <div>
+      <button class="btn" onclick="go('Product.html')">
+        <i class="fas fa-boxes"></i> Manage Products
+      </button>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 70px;">Image</th>
+          <th style="width: 110px;">Code</th>
+          <th>Product Name</th>
+          <th>Category</th>
+          <th>Description</th>
+          <th style="width: 90px;">Stock</th>
+          <th style="width: 140px;">Status</th>
+          <th style="width: 180px;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="tb">
+        <tr><td colspan="8" style="text-align:center;">Loading low stock products...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note"><i class="fas fa-circle-info"></i> Showing products where stock &lt; 20 (Low Stock Alert).</div>
+</div>
+
+<!-- View / Restock Modal -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalTitle">Product Details</h3>
+      <div class="modal-close" onclick="closeModal()">&times;</div>
+    </div>
+
+    <div class="modal-product-detail">
+      <img id="modalImg" src="/image/1772787358629-VitalWater-1024x1024.png" alt="Product Image" onerror="this.src='/image/1772787358629-VitalWater-1024x1024.png'">
+      <div class="modal-detail-text">
+        <strong id="modalProductName">—</strong>
+        <span id="modalProductCode">Code: —</span>
+        <span id="modalCategory">Category: —</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Current Stock</label>
+      <input type="number" id="modalStock" min="0">
+    </div>
+
+    <div class="form-group">
+      <label>Sale Price ($)</label>
+      <input type="number" id="modalSalePrice" step="0.01" readonly style="background:#f8fafc;">
+    </div>
+
+    <div class="form-group">
+      <label>Description</label>
+      <input type="text" id="modalDesc" readonly style="background:#f8fafc;">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn gray" onclick="closeModal()">Close</button>
+      <button class="btn" id="modalGoProductBtn" onclick="go('Product.html')"><i class="fas fa-pen"></i> Edit in Products</button>
+      <button class="btn green" id="modalSaveStockBtn" onclick="saveRestock()"><i class="fas fa-check"></i> Update Stock</button>
+    </div>
+  </div>
 </div>
 
 <script src="shared-sidebar.js"></script>
 <script>
 function toggleSidebar(){
   const sidebar = document.getElementById("sidebar");
-  const navbar = document.querySelector(".navbar");
-  const main = document.querySelector(".main");
+  const navbar = document.getElementById("navbar");
+  const main = document.getElementById("main");
 
   if(window.innerWidth <= 768){
     sidebar.classList.toggle("open");
@@ -79,37 +145,217 @@ function toggleSidebar(){
   navbar.classList.toggle("full");
   main.classList.toggle("full");
 }
-function go(p){ window.location.href=p; }
-function logout(){ window.location.href="login.html"; }
 
-const FALLBACK_IMG="/image/1772787358629-VitalWater-1024x1024.png";
+function go(p){ window.location.href = p; }
+function logout(){ 
+  localStorage.removeItem("martUser");
+  window.location.href = "login.html"; 
+}
+
+const FALLBACK_IMG = "/image/1772787358629-VitalWater-1024x1024.png";
+let ALL_PRODUCTS = [];
+let SEARCH_QUERY = "";
+let CURRENT_USER = null;
+let IS_ADMIN = false;
+let SELECTED_PRODUCT = null;
+
+function guardLoginAndRole(){
+  const raw = localStorage.getItem("martUser");
+  if(!raw){
+    window.location.href = "login.html";
+    return false;
+  }
+
+  try{
+    CURRENT_USER = JSON.parse(raw);
+  }catch{
+    localStorage.removeItem("martUser");
+    window.location.href = "login.html";
+    return false;
+  }
+
+  IS_ADMIN = String(CURRENT_USER.role || "User").toLowerCase() === "admin";
+  const adminNote = document.getElementById("adminNote");
+  if(adminNote) adminNote.style.display = IS_ADMIN ? "none" : "block";
+  return true;
+}
 
 async function load(){
-  const tb=document.getElementById("tb");
+  const tb = document.getElementById("tb");
   try{
-    const res=await fetch("/api/low-stock");
+    const res = await fetch("/api/low-stock");
     if(!res.ok) throw new Error("API Error");
-    const data=await res.json();
-    const list=data.products||[];
-    if(list.length===0){
-      tb.innerHTML="<tr><td colspan='6'>No low-stock products 🎉</td></tr>";
-      return;
-    }
-    tb.innerHTML=list.map(p=>`
-      <tr>
-        <td><div class="img-cell"><img src="${(p.image||'').trim()||FALLBACK_IMG}" onerror="this.src='${FALLBACK_IMG}'"></div></td>
-        <td>${p.productCode||""}</td>
-        <td>${p.productName||""}</td>
-        <td>${p.categoryID||""}</td>
-        <td>${p.description||""}</td>
-        <td><span class="badge">${Number(p.stock||0)}</span></td>
-      </tr>
-    `).join("");
+    const data = await res.json();
+    ALL_PRODUCTS = data.products || [];
+    renderTable();
   }catch(e){
-    tb.innerHTML="<tr><td colspan='6'>Error loading</td></tr>";
+    tb.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#dc3545;"><i class="fas fa-exclamation-circle"></i> Error loading low stock products</td></tr>`;
   }
 }
-load();
+
+function handleSearch(){
+  SEARCH_QUERY = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+  renderTable();
+}
+
+function statusBadge(stock){
+  const s = Number(stock || 0);
+  if(s <= 5){
+    return '<span class="status critical"><i class="fas fa-triangle-exclamation"></i> Critical</span>';
+  }
+  return '<span class="status warning"><i class="fas fa-boxes-stacked"></i> Low Stock</span>';
+}
+
+function renderTable(){
+  const tb = document.getElementById("tb");
+  
+  let list = ALL_PRODUCTS;
+
+  if(SEARCH_QUERY){
+    list = list.filter(p => {
+      const code = String(p.productCode || "").toLowerCase();
+      const name = String(p.productName || "").toLowerCase();
+      const cat = String(p.categoryID || p.categoryName || "").toLowerCase();
+      const desc = String(p.description || "").toLowerCase();
+      return code.includes(SEARCH_QUERY) || name.includes(SEARCH_QUERY) || cat.includes(SEARCH_QUERY) || desc.includes(SEARCH_QUERY);
+    });
+  }
+
+  if(list.length === 0){
+    tb.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 32px; color: #64748b;"><i class="fas fa-box-open" style="font-size: 1.8rem; display: block; margin-bottom: 8px; color: #94a3b8;"></i>No matching low-stock products found</td></tr>`;
+    return;
+  }
+
+  tb.innerHTML = list.map(p => {
+    const stock = Number(p.stock || 0);
+    const img = (p.image || "").trim() || FALLBACK_IMG;
+    const safeCode = String(p.productCode || "").replace(/'/g, "\\'");
+    const stockBadge = stock <= 5
+      ? `<span class="stock-pill critical">${stock}</span>`
+      : `<span class="stock-pill warning">${stock}</span>`;
+
+    return `
+      <tr>
+        <td>
+          <div class="img-cell">
+            <img src="${img}" onerror="this.src='${FALLBACK_IMG}'" alt="${p.productName || 'Product'}">
+          </div>
+        </td>
+        <td><span class="code-badge">${p.productCode || "—"}</span></td>
+        <td><strong class="product-name">${p.productName || "—"}</strong></td>
+        <td><span class="category-pill">${p.categoryName || p.categoryID || "—"}</span></td>
+        <td>${p.description || "—"}</td>
+        <td>${stockBadge}</td>
+        <td>${statusBadge(stock)}</td>
+        <td class="action-cell">
+          <div class="action-btn-group">
+            <button class="btn btn-view" onclick="viewProduct('${safeCode}')" title="View details">
+              <i class="fas fa-eye"></i> View
+            </button>
+            ${IS_ADMIN ? `
+              <button class="btn btn-delete red" onclick="deleteProduct('${safeCode}')" title="Delete product">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            ` : ``}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function viewProduct(code){
+  const p = ALL_PRODUCTS.find(x => String(x.productCode) === String(code));
+  if(!p) return;
+  SELECTED_PRODUCT = p;
+
+  document.getElementById("modalImg").src = (p.image || "").trim() || FALLBACK_IMG;
+  document.getElementById("modalProductName").textContent = p.productName || "Product";
+  document.getElementById("modalProductCode").textContent = "Code: " + (p.productCode || "—");
+  document.getElementById("modalCategory").textContent = "Category: " + (p.categoryName || p.categoryID || "—");
+  document.getElementById("modalStock").value = p.stock ?? 0;
+  document.getElementById("modalSalePrice").value = Number(p.salePrice ?? 0).toFixed(2);
+  document.getElementById("modalDesc").value = p.description || "";
+
+  document.getElementById("modalStock").disabled = !IS_ADMIN;
+  document.getElementById("modalSaveStockBtn").style.display = IS_ADMIN ? "inline-flex" : "none";
+
+  document.getElementById("modal").classList.add("show");
+}
+
+function closeModal(){
+  document.getElementById("modal").classList.remove("show");
+  SELECTED_PRODUCT = null;
+}
+
+async function saveRestock(){
+  if(!IS_ADMIN){
+    alert("Only Admin can update stock.");
+    return;
+  }
+  if(!SELECTED_PRODUCT) return;
+
+  const newStock = Number(document.getElementById("modalStock").value || 0);
+  if(newStock < 0){
+    alert("Stock cannot be negative.");
+    return;
+  }
+
+  try{
+    const payload = {
+      ...SELECTED_PRODUCT,
+      stock: newStock
+    };
+
+    const res = await fetch(`/api/products/${encodeURIComponent(SELECTED_PRODUCT.productCode)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if(!res.ok){
+      const t = await res.text();
+      return alert("Stock update failed: " + t);
+    }
+
+    closeModal();
+    await load();
+  }catch(err){
+    alert("Error updating stock: " + err.message);
+  }
+}
+
+async function deleteProduct(code){
+  if(!IS_ADMIN){
+    alert("Only Admin can delete products.");
+    return;
+  }
+  if(!confirm(`Delete product ${code}?`)) return;
+
+  try{
+    const res = await fetch(`/api/products/${encodeURIComponent(code)}`, {
+      method: "DELETE"
+    });
+    if(!res.ok){
+      const text = await res.text().catch(() => "Delete failed");
+      return alert(text);
+    }
+
+    ALL_PRODUCTS = ALL_PRODUCTS.filter(p => String(p.productCode) !== String(code));
+    renderTable();
+  }catch(err){
+    alert("Error deleting product");
+  }
+}
+
+window.addEventListener("click", function(e){
+  const modal = document.getElementById("modal");
+  if(e.target === modal) closeModal();
+});
+
+if(guardLoginAndRole()){
+  load();
+}
 </script>
 
 </body>

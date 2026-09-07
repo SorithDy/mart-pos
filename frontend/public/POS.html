@@ -4,7 +4,13 @@
   <script src="runtime-config.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>POS - Mart Dashboard</title>
+  <title>POS Terminal - Mart Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
@@ -12,6 +18,7 @@
 </head>
 <body data-page="pos">
 
+  <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <div class="logo">
       <i class="fas fa-store"></i>
@@ -31,101 +38,205 @@
     </ul>
   </div>
 
+  <!-- Navbar -->
   <div class="navbar" id="navbar">
     <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
       <i class="fas fa-bars"></i>
     </button>
     <div class="nav-actions">
-      <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+      <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard" title="Dashboard">
         <i class="fas fa-home"></i>
       </button>
-      <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+      <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile" title="Profile">
         <i class="fas fa-user"></i>
       </button>
-      <button class="nav-icon-btn" type="button" aria-label="Settings">
-        <i class="fas fa-cog"></i>
+      <button class="nav-icon-btn" type="button" onclick="go('Product.html')" aria-label="Products" title="Products">
+        <i class="fas fa-boxes"></i>
       </button>
     </div>
   </div>
 
+  <!-- Main POS Area -->
   <div class="main" id="main">
-    <h2>POS System</h2>
-    <div class="user-badge" id="userBadge"></div>
 
-    <div class="search">
-      <i class="fas fa-search"></i>
-      <input id="search" placeholder="Search product..." oninput="renderProducts()">
+    <!-- Top Header Bar -->
+    <div class="pos-header-bar">
+      <div class="pos-title-group">
+        <h2>POS Terminal</h2>
+        <span class="live-badge">
+          <span class="live-dot"></span> Active Register #01
+        </span>
+      </div>
+
+      <div class="pos-meta-right">
+        <div class="user-badge-pill" id="userBadge">
+          <span class="avatar-icon"><i class="fas fa-user"></i></span>
+          <span id="cashierName">Cashier</span>
+          <span class="role-tag" id="cashierRole">Staff</span>
+        </div>
+
+        <div class="pos-clock" id="liveClock">
+          <i class="far fa-clock" style="color:#3b82f6;"></i>
+          <span id="clockTime">--:--:--</span>
+        </div>
+
+        <button class="pos-sync-btn" onclick="loadAllData()" title="Reload Products & Categories">
+          <i class="fas fa-rotate"></i> Sync
+        </button>
+      </div>
     </div>
 
     <div class="pos-container">
-      <div class="products">
-        <h3>Products</h3>
-        <div class="small-muted promotion-note">Promotions are applied automatically when active.</div>
-        <div class="product-grid" id="productGrid">Loading products...</div>
+
+      <!-- Products Section (Left) -->
+      <div class="products-section">
+        <div class="products-controls">
+          
+          <!-- Search Row -->
+          <div class="search-box-wrap">
+            <div class="search-input-group">
+              <i class="fas fa-search search-icon"></i>
+              <input id="search" placeholder="Search product by name, code..." oninput="onSearchInput()">
+              <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearch()" title="Clear search">
+                <i class="fas fa-times-circle"></i>
+              </button>
+            </div>
+            <div class="items-counter" id="itemsCount">Showing 0 products</div>
+          </div>
+
+          <!-- Category Filter Bar -->
+          <div class="category-filter-bar" id="categoryFilterBar">
+            <button class="category-pill active" data-category="ALL" onclick="selectCategory('ALL')">
+              <i class="fas fa-border-all"></i> All Items
+            </button>
+            <button class="category-pill promo-pill-filter" data-category="PROMO" onclick="selectCategory('PROMO')">
+              <i class="fas fa-bolt"></i> On Sale
+            </button>
+            <!-- Dynamic categories injected here -->
+          </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="product-grid" id="productGrid">
+          <div class="grid-empty-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading products...</p>
+          </div>
+        </div>
       </div>
 
+      <!-- Order Details & Cart (Right) -->
       <div class="order-panel">
-        <h3>Order Details</h3>
+        <div class="order-panel-header">
+          <div class="order-title-box">
+            <i class="fas fa-receipt"></i>
+            <h3>Current Order</h3>
+            <span class="cart-count-badge" id="cartBadge">0 Items</span>
+          </div>
 
-        <div class="field">
-          <label>Employee Number</label>
-          <input id="employeeNumber" type="number" placeholder="1002" readonly>
+          <button class="clear-cart-btn" onclick="clearCart()" title="Clear all items">
+            <i class="fas fa-trash-can"></i> Clear
+          </button>
         </div>
 
-        <div class="field">
-          <label>Payment Method</label>
-          <select id="paymentMethod" aria-label="Payment method">
-            <option>Cash</option>
-            <option>Card</option>
-            <option>ABA</option>
-            <option>Wing</option>
-          </select>
+        <div class="order-form-group">
+          <div class="order-field-row">
+            <label><i class="fas fa-id-badge" style="margin-right:4px;"></i> Cashier ID</label>
+            <div class="employee-input-wrap">
+              <input id="employeeNumber" type="number" placeholder="1001" readonly>
+            </div>
+          </div>
+
+          <div>
+            <label class="payment-selector-label"><i class="fas fa-wallet" style="margin-right:4px;"></i> Payment Method</label>
+            <div class="payment-method-chips" id="paymentChips">
+              <div class="pay-chip active" data-method="Cash" onclick="selectPaymentMethod('Cash')">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Cash</span>
+              </div>
+              <div class="pay-chip aba" data-method="ABA" onclick="selectPaymentMethod('ABA')">
+                <i class="fas fa-qrcode"></i>
+                <span>ABA</span>
+              </div>
+              <div class="pay-chip" data-method="Card" onclick="selectPaymentMethod('Card')">
+                <i class="fas fa-credit-card"></i>
+                <span>Card</span>
+              </div>
+              <div class="pay-chip" data-method="Wing" onclick="selectPaymentMethod('Wing')">
+                <i class="fas fa-dove"></i>
+                <span>Wing</span>
+              </div>
+            </div>
+
+            <!-- Native select element kept for full backend compatibility -->
+            <select id="paymentMethod" class="hidden-payment-select" aria-label="Payment method">
+              <option value="Cash" selected>Cash</option>
+              <option value="ABA">ABA</option>
+              <option value="Card">Card</option>
+              <option value="Wing">Wing</option>
+            </select>
+          </div>
         </div>
 
-        <div class="order-items" id="cartItems"></div>
+        <!-- Cart Items List -->
+        <div class="cart-items-wrap" id="cartItems">
+          <div class="cart-empty-box">
+            <i class="fas fa-cart-shopping"></i>
+            <p>Your cart is empty.<br>Tap products from menu to add.</p>
+          </div>
+        </div>
 
-        <div class="summary">
-          <div class="order-row">
+        <!-- Order Summary Breakdown -->
+        <div class="order-summary-box">
+          <div class="summary-line">
             <span>Subtotal</span>
             <span>$<span id="subtotal">0.00</span></span>
           </div>
 
-          <div class="order-row">
-            <span>Discount</span>
+          <div class="summary-line discount-line">
+            <span><i class="fas fa-tag"></i> Promotion Discount</span>
             <span>-$<span id="discountTotal">0.00</span></span>
           </div>
 
-          <div class="order-row">
-            <span>Total</span>
+          <div class="summary-line total-line">
+            <span>Total Due</span>
             <span>$<span id="total">0.00</span></span>
           </div>
 
-          <button class="pay-btn" id="payBtn" onclick="payNow()">Pay Now</button>
+          <button class="pay-btn" id="payBtn" onclick="payNow()" disabled>
+            <i class="fas fa-lock"></i> Pay Now
+          </button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Payment Modal Overlay (Cash/Card/Wing & ABA QR) -->
   <div class="pay-modal-overlay" id="payModal">
     <div class="pay-modal">
-      <div class="pay-icon">
-        <i class="fas fa-qrcode"></i>
+      <div class="pay-icon" id="modalPayIcon">
+        <i class="fas fa-credit-card"></i>
       </div>
 
       <div class="pay-title" id="payTitle">Confirm Payment?</div>
       <div class="pay-subtitle" id="payModalText">Please confirm payment.</div>
 
-      <div class="pay-total">Total: $<span id="modalTotalAmount">0.00</span></div>
+      <div>
+        <span class="pay-total-badge">Total: $<span id="modalTotalAmount">0.00</span></span>
+      </div>
 
+      <!-- ABA KHQR Section -->
       <div class="qr-wrap hidden" id="qrSection">
-        <div class="qr-label">Scan to ABA</div>
+        <div class="qr-header-tag">KHQR • ABA PAY</div>
         <div id="abaQrBox"></div>
-        <div class="pay-status" id="abaPayStatus"></div>
+        <div class="pay-status" id="abaPayStatus">
+          <i class="fas fa-spinner fa-spin"></i> Generating QR...
+        </div>
       </div>
 
       <div class="pay-actions">
         <button class="pay-cancel" onclick="closePayModal()">Cancel</button>
-        <button class="pay-ok" id="modalOkBtn" onclick="confirmCashLikePayment()">Ok</button>
+        <button class="pay-ok" id="modalOkBtn" onclick="confirmCashLikePayment()">Confirm Payment</button>
       </div>
     </div>
   </div>
@@ -154,14 +265,27 @@
       main.classList.toggle("full");
     }
 
+    // State Variables
     let PRODUCTS = [];
     let PROMOTIONS = [];
+    let CATEGORIES = [];
+    let SELECTED_CATEGORY = "ALL";
     let cart = [];
     let CURRENT_USER = null;
 
     let pendingCheckoutPayload = null;
     let pendingAbaInfo = null;
     let abaPollTimer = null;
+
+    // Live Clock
+    function updateClock(){
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const clockEl = document.getElementById("clockTime");
+      if(clockEl) clockEl.textContent = timeStr;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
 
     function money(v){
       return Number(v || 0).toFixed(2);
@@ -198,7 +322,6 @@
       if (!promo) return 0;
 
       let discount = 0;
-
       if (promo.discountType === "percent") {
         discount = price * (Number(promo.discountValue || 0) / 100);
       } else {
@@ -241,11 +364,14 @@
         return false;
       }
 
-      const role = String(CURRENT_USER.role || "User").toLowerCase();
-      const isAdmin = role === "admin";
+      const role = String(CURRENT_USER.role || "User");
+      const isAdmin = role.toLowerCase() === "admin";
+      const name = CURRENT_USER.fullName || CURRENT_USER.username || "User";
 
-      document.getElementById("userBadge").textContent =
-        `Logged in: ${CURRENT_USER.fullName || CURRENT_USER.username || ""} (${CURRENT_USER.role || "User"})`;
+      const cashierNameEl = document.getElementById("cashierName");
+      const cashierRoleEl = document.getElementById("cashierRole");
+      if(cashierNameEl) cashierNameEl.textContent = name;
+      if(cashierRoleEl) cashierRoleEl.textContent = role;
 
       if (!isAdmin) {
         const productsMenu = document.getElementById("menuProducts");
@@ -264,11 +390,56 @@
       return true;
     }
 
-    async function loadProducts(){
+    // Payment Method Switcher
+    function selectPaymentMethod(method){
+      document.querySelectorAll("#paymentChips .pay-chip").forEach(chip => {
+        if(chip.dataset.method === method){
+          chip.classList.add("active");
+        }else{
+          chip.classList.remove("active");
+        }
+      });
+
+      const selectEl = document.getElementById("paymentMethod");
+      if(selectEl) selectEl.value = method;
+    }
+
+    // Category Filter Switcher
+    function selectCategory(catID){
+      SELECTED_CATEGORY = catID;
+      document.querySelectorAll("#categoryFilterBar .category-pill").forEach(pill => {
+        if(pill.dataset.category === catID){
+          pill.classList.add("active");
+        }else{
+          pill.classList.remove("active");
+        }
+      });
+      renderProducts();
+    }
+
+    function onSearchInput(){
+      const val = document.getElementById("search").value.trim();
+      const clearBtn = document.getElementById("searchClearBtn");
+      if(val.length > 0){
+        clearBtn.classList.add("show");
+      }else{
+        clearBtn.classList.remove("show");
+      }
+      renderProducts();
+    }
+
+    function clearSearch(){
+      document.getElementById("search").value = "";
+      document.getElementById("searchClearBtn").classList.remove("show");
+      renderProducts();
+    }
+
+    async function loadAllData(){
       try{
-        const [productsRes, promotionsRes] = await Promise.all([
-          fetch("/api/products"),
-          fetch("/api/promotions")
+        const [productsRes, promotionsRes, categoriesRes] = await Promise.all([
+          fetch("/api/products", { cache: "no-store" }),
+          fetch("/api/promotions", { cache: "no-store" }),
+          fetch("/api/categories", { cache: "no-store" })
         ]);
 
         const productsData = await productsRes.json();
@@ -281,25 +452,113 @@
           PROMOTIONS = [];
         }
 
+        if (categoriesRes.ok) {
+          const categoriesData = await categoriesRes.json();
+          CATEGORIES = Array.isArray(categoriesData.categories) ? categoriesData.categories : [];
+        } else {
+          CATEGORIES = [];
+        }
+
+        renderCategoryPills();
         renderProducts();
       }catch(err){
-        document.getElementById("productGrid").innerHTML = "Error loading products";
+        document.getElementById("productGrid").innerHTML = `
+          <div class="grid-empty-state">
+            <i class="fas fa-circle-exclamation" style="color:#ef4444;"></i>
+            <p>Error loading products. Please click Sync to retry.</p>
+          </div>`;
         console.error(err);
       }
+    }
+
+    function renderCategoryPills(){
+      const container = document.getElementById("categoryFilterBar");
+      
+      // Calculate category counts
+      const counts = {};
+      let promoCount = 0;
+
+      PRODUCTS.forEach(p => {
+        const cat = p.categoryID || p.categoryName || "Other";
+        counts[cat] = (counts[cat] || 0) + 1;
+
+        if (getPromotionForProduct(p.productCode)) {
+          promoCount++;
+        }
+      });
+
+      // Extract unique categories from DB or Products
+      const catMap = new Map();
+      CATEGORIES.forEach(c => {
+        const id = (c.categoryID || "").trim();
+        if(id) catMap.set(id, c.categoryName || id);
+      });
+
+      // Also include any categories present in products
+      PRODUCTS.forEach(p => {
+        const id = (p.categoryID || "").trim();
+        if(id && !catMap.has(id)){
+          catMap.set(id, p.categoryName || id);
+        }
+      });
+
+      let html = `
+        <button class="category-pill ${SELECTED_CATEGORY === 'ALL' ? 'active' : ''}" data-category="ALL" onclick="selectCategory('ALL')">
+          <i class="fas fa-border-all"></i> All Items <span class="cat-count">${PRODUCTS.length}</span>
+        </button>
+        <button class="category-pill promo-pill-filter ${SELECTED_CATEGORY === 'PROMO' ? 'active' : ''}" data-category="PROMO" onclick="selectCategory('PROMO')">
+          <i class="fas fa-bolt"></i> On Sale <span class="cat-count">${promoCount}</span>
+        </button>
+      `;
+
+      catMap.forEach((name, id) => {
+        const count = counts[id] || 0;
+        const activeClass = SELECTED_CATEGORY === id ? 'active' : '';
+        html += `
+          <button class="category-pill ${activeClass}" data-category="${id}" onclick="selectCategory('${id}')">
+            <span>${name}</span>
+            <span class="cat-count">${count}</span>
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
     }
 
     function renderProducts(){
       const q = document.getElementById("search").value.toLowerCase().trim();
       const grid = document.getElementById("productGrid");
+      const countEl = document.getElementById("itemsCount");
 
-      const filtered = PRODUCTS.filter(p =>
-        String(p.productCode || "").toLowerCase().includes(q) ||
-        String(p.productName || "").toLowerCase().includes(q) ||
-        String(p.description || "").toLowerCase().includes(q)
-      );
+      let filtered = PRODUCTS.filter(p => {
+        const matchesQuery = !q ||
+          String(p.productCode || "").toLowerCase().includes(q) ||
+          String(p.productName || "").toLowerCase().includes(q) ||
+          String(p.description || "").toLowerCase().includes(q) ||
+          String(p.categoryName || "").toLowerCase().includes(q) ||
+          String(p.categoryID || "").toLowerCase().includes(q);
+
+        if (!matchesQuery) return false;
+
+        if (SELECTED_CATEGORY === "ALL") return true;
+
+        if (SELECTED_CATEGORY === "PROMO") {
+          return Boolean(getPromotionForProduct(p.productCode));
+        }
+
+        return String(p.categoryID || "").toUpperCase() === SELECTED_CATEGORY.toUpperCase() ||
+               String(p.categoryName || "").toLowerCase() === SELECTED_CATEGORY.toLowerCase();
+      });
+
+      countEl.textContent = `Showing ${filtered.length} product${filtered.length === 1 ? '' : 's'}`;
 
       if (filtered.length === 0) {
-        grid.innerHTML = "No products found";
+        grid.innerHTML = `
+          <div class="grid-empty-state">
+            <i class="fas fa-box-open"></i>
+            <p>No products match your search or filter.</p>
+          </div>
+        `;
         return;
       }
 
@@ -308,17 +567,46 @@
         const promo = getPromotionForProduct(p.productCode);
         const finalPrice = getFinalPrice(p);
         const promoLabel = getPromoLabel(promo);
+        const stock = Number(p.stock || 0);
         const code = String(p.productCode || "").replace(/'/g, "\\'");
+        const categoryName = p.categoryName || p.categoryID || "Item";
+
+        let stockClass = "in-stock";
+        let stockText = `Stock: ${stock}`;
+        if (stock <= 0) {
+          stockClass = "out";
+          stockText = "Out of Stock";
+        } else if (stock <= 10) {
+          stockClass = "low";
+          stockText = `Low: ${stock}`;
+        }
 
         return `
           <div class="product-card" onclick="addProduct('${code}')">
-            ${promo ? `<div class="promo-badge">${promoLabel}</div>` : ""}
-            <img src="${p.image || '/image/noimage.png'}" onerror="this.src='/image/noimage.png'">
-            <div class="product-name">${p.productName || ""}</div>
-            <div class="product-price">$${money(finalPrice)}</div>
-            ${promo ? `<div class="product-old-price">$${money(salePrice)}</div>` : `<div class="product-old-price">&nbsp;</div>`}
-            <div class="stock-text">Stock: ${Number(p.stock || 0)}</div>
-            <div class="promo-note">${promo ? promoLabel : ""}</div>
+            <div class="card-top-badges">
+              ${promo ? `<div class="promo-badge-tag"><i class="fas fa-bolt"></i> ${promoLabel}</div>` : `<div></div>`}
+            </div>
+
+            <div class="product-img-wrap">
+              <img src="${p.image || '/image/noimage.png'}" onerror="this.src='/image/noimage.png'" alt="${p.productName || 'Product'}">
+            </div>
+
+            <div class="product-card-body">
+              <div class="product-category-tag">${categoryName}</div>
+              <div class="product-name" title="${p.productName || ''}">${p.productName || 'Unnamed Product'}</div>
+              
+              <div class="price-row">
+                <span class="product-final-price">$${money(finalPrice)}</span>
+                ${promo ? `<span class="product-original-price">$${money(salePrice)}</span>` : ""}
+              </div>
+
+              <div class="card-footer-info">
+                <span class="stock-pill ${stockClass}">${stockText}</span>
+                <button class="quick-add-btn" type="button" title="Add to Cart">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
           </div>
         `;
       }).join("");
@@ -329,7 +617,7 @@
       if (!product) return;
 
       if (Number(product.stock || 0) <= 0) {
-        alert("Out of stock");
+        alert("This item is currently out of stock.");
         return;
       }
 
@@ -341,7 +629,7 @@
 
       if (item) {
         if (item.quantity >= Number(product.stock || 0)) {
-          alert("Not enough stock");
+          alert(`Cannot add more. Only ${product.stock} available in stock.`);
           return;
         }
         item.quantity++;
@@ -361,26 +649,83 @@
       renderCart();
     }
 
+    function updateCartQuantity(index, delta, event){
+      if(event) event.stopPropagation();
+      const item = cart[index];
+      if(!item) return;
+
+      const product = PRODUCTS.find(p => String(p.productCode) === String(item.productCode));
+      const maxStock = product ? Number(product.stock || 9999) : 9999;
+
+      const newQty = item.quantity + delta;
+      if (newQty <= 0) {
+        removeItem(index, event);
+        return;
+      }
+
+      if (newQty > maxStock) {
+        alert(`Maximum stock reached (${maxStock})`);
+        return;
+      }
+
+      item.quantity = newQty;
+      renderCart();
+    }
+
+    function removeItem(i, event){
+      if(event) event.stopPropagation();
+      cart.splice(i, 1);
+      renderCart();
+    }
+
+    function clearCart(){
+      if (cart.length === 0) return;
+      if (confirm("Are you sure you want to clear the current order?")) {
+        cart = [];
+        renderCart();
+      }
+    }
+
     function renderCart(){
       const box = document.getElementById("cartItems");
+      const badge = document.getElementById("cartBadge");
+      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+      badge.textContent = `${totalItems} Item${totalItems === 1 ? '' : 's'}`;
 
       if (cart.length === 0) {
-        box.innerHTML = `<div class="order-row"><div>No items yet</div><div>$0.00</div></div>`;
+        box.innerHTML = `
+          <div class="cart-empty-box">
+            <i class="fas fa-cart-shopping"></i>
+            <p>Your cart is empty.<br>Tap products from menu to add.</p>
+          </div>
+        `;
       } else {
         box.innerHTML = cart.map((p, i) => {
           const lineFinal = p.price * p.quantity;
           const lineDiscount = (p.basePrice - p.price) * p.quantity;
 
           return `
-            <div class="order-row">
-              <div>
-                ${p.productName} (x${p.quantity})
-                <span class="line-sub">$${money(p.basePrice)} each</span>
-                ${lineDiscount > 0 ? `<div class="discount-text">${p.promotionLabel} | Save $${money(lineDiscount)}</div>` : ""}
+            <div class="cart-item-card">
+              <div class="cart-item-info">
+                <div class="cart-item-title" title="${p.productName}">${p.productName}</div>
+                <div class="cart-item-sub">
+                  <span>$${money(p.price)} ea</span>
+                  ${lineDiscount > 0 ? `<span class="cart-promo-tag">Save $${money(lineDiscount)}</span>` : ""}
+                </div>
               </div>
-              <div>
-                $${money(lineFinal)}
-                <button class="remove" onclick="removeItem(${i})">x</button>
+
+              <div class="cart-item-actions">
+                <div class="qty-stepper">
+                  <button class="qty-btn" onclick="updateCartQuantity(${i}, -1, event)" title="Decrease">-</button>
+                  <span class="qty-val">${p.quantity}</span>
+                  <button class="qty-btn" onclick="updateCartQuantity(${i}, 1, event)" title="Increase">+</button>
+                </div>
+
+                <div class="cart-item-price">$${money(lineFinal)}</div>
+
+                <button class="cart-remove-btn" onclick="removeItem(${i}, event)" title="Remove">
+                  <i class="fas fa-trash-can"></i>
+                </button>
               </div>
             </div>
           `;
@@ -397,11 +742,6 @@
       document.getElementById("payBtn").disabled = cart.length === 0;
     }
 
-    function removeItem(i){
-      cart.splice(i, 1);
-      renderCart();
-    }
-
     function resetPayModalState(){
       pendingCheckoutPayload = null;
       pendingAbaInfo = null;
@@ -416,7 +756,7 @@
       document.getElementById("abaQrBox").innerHTML = "";
       document.getElementById("abaPayStatus").textContent = "";
       document.getElementById("modalOkBtn").disabled = false;
-      document.getElementById("modalOkBtn").textContent = "Ok";
+      document.getElementById("modalOkBtn").textContent = "Confirm Payment";
       document.getElementById("modalOkBtn").onclick = confirmCashLikePayment;
     }
 
@@ -427,15 +767,23 @@
     function openSimplePaymentModal(totalAmount, payload){
       pendingCheckoutPayload = payload;
 
-      document.getElementById("payTitle").textContent = "Confirm Payment?";
+      const iconMap = {
+        Cash: "fa-money-bill-wave",
+        Card: "fa-credit-card",
+        Wing: "fa-dove"
+      };
+      const iconClass = iconMap[payload.paymentMethod] || "fa-wallet";
+      document.getElementById("modalPayIcon").innerHTML = `<i class="fas ${iconClass}"></i>`;
+
+      document.getElementById("payTitle").textContent = `Confirm ${payload.paymentMethod} Payment`;
       document.getElementById("payModalText").innerHTML =
-        `Please confirm ${payload.paymentMethod} payment.<br>Customer will pay immediately.`;
+        `Receive payment of <strong>$${money(totalAmount)}</strong> via <strong>${payload.paymentMethod}</strong>.`;
       document.getElementById("modalTotalAmount").textContent = money(totalAmount);
       document.getElementById("qrSection").classList.add("hidden");
 
       const okBtn = document.getElementById("modalOkBtn");
       okBtn.disabled = false;
-      okBtn.textContent = "Ok";
+      okBtn.textContent = "Confirm Payment";
       okBtn.onclick = confirmCashLikePayment;
 
       document.getElementById("payModal").classList.add("show");
@@ -444,17 +792,18 @@
     async function openAbaQrModal(totalAmount, payload){
       pendingCheckoutPayload = payload;
 
-      document.getElementById("payTitle").textContent = "Scan to ABA";
+      document.getElementById("modalPayIcon").innerHTML = `<i class="fas fa-qrcode"></i>`;
+      document.getElementById("payTitle").textContent = "Scan ABA KHQR";
       document.getElementById("payModalText").innerHTML =
-        `Please scan this ABA QR code and complete payment.`;
+        `Customer can scan the KHQR code below using ABA Mobile.`;
       document.getElementById("modalTotalAmount").textContent = money(totalAmount);
       document.getElementById("qrSection").classList.remove("hidden");
       document.getElementById("abaQrBox").innerHTML = "";
-      document.getElementById("abaPayStatus").textContent = "Generating QR...";
+      document.getElementById("abaPayStatus").innerHTML = `<i class="fas fa-spinner fa-spin"></i> Generating QR...`;
 
       const okBtn = document.getElementById("modalOkBtn");
       okBtn.disabled = true;
-      okBtn.textContent = "Waiting...";
+      okBtn.textContent = "Waiting for Scan...";
       okBtn.onclick = function(){};
 
       document.getElementById("payModal").classList.add("show");
@@ -486,20 +835,23 @@
         if (data.qrString) {
           new QRCode(qrBox, {
             text: data.qrString,
-            width: 150,
-            height: 150
+            width: 160,
+            height: 160,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.M
           });
         } else if (data.qrImageUrl) {
-          qrBox.innerHTML = `<img src="${data.qrImageUrl}" alt="ABA QR" style="width:150px;height:150px;object-fit:contain;">`;
+          qrBox.innerHTML = `<img src="${data.qrImageUrl}" alt="ABA QR" style="width:160px;height:160px;object-fit:contain;">`;
         } else {
-          throw new Error("Backend did not return qrString");
+          throw new Error("Backend did not return valid QR payload");
         }
 
-        document.getElementById("abaPayStatus").textContent = "Waiting for customer payment...";
+        document.getElementById("abaPayStatus").innerHTML = `<span class="live-dot" style="margin-right:6px;"></span> Waiting for customer payment...`;
         startAbaStatusPolling();
       }catch(err){
         console.error(err);
-        document.getElementById("abaPayStatus").textContent = err.message || "Failed to generate QR";
+        document.getElementById("abaPayStatus").innerHTML = `<span style="color:#ef4444;">${err.message || "Failed to generate QR"}</span>`;
       }
     }
 
@@ -522,18 +874,18 @@
           if (status === "success" || status === "paid") {
             clearInterval(abaPollTimer);
             abaPollTimer = null;
-            document.getElementById("abaPayStatus").textContent = "Payment successful.";
+            document.getElementById("abaPayStatus").innerHTML = `<i class="fas fa-check-circle" style="color:#10b981;"></i> Payment successful!`;
             await finalizeCheckoutAfterAba(data);
           } else if (status === "failed") {
             clearInterval(abaPollTimer);
             abaPollTimer = null;
-            document.getElementById("abaPayStatus").textContent = "Payment failed.";
+            document.getElementById("abaPayStatus").innerHTML = `<i class="fas fa-times-circle" style="color:#ef4444;"></i> Payment failed.`;
           } else if (status === "expired" || status === "timeout") {
             clearInterval(abaPollTimer);
             abaPollTimer = null;
-            document.getElementById("abaPayStatus").textContent = "QR expired. Please try again.";
+            document.getElementById("abaPayStatus").innerHTML = `<i class="fas fa-clock" style="color:#f59e0b;"></i> QR expired. Please retry.`;
           } else {
-            document.getElementById("abaPayStatus").textContent = "Waiting for customer payment...";
+            document.getElementById("abaPayStatus").innerHTML = `<span class="live-dot" style="margin-right:6px;"></span> Waiting for customer payment...`;
           }
         }catch(err){
           console.error(err);
@@ -567,13 +919,13 @@
 
         cart = [];
         renderCart();
-        await loadProducts();
-        document.getElementById("paymentMethod").value = "Cash";
+        await loadAllData();
+        selectPaymentMethod("Cash");
         window.location.href = "ReceiptHistory.html";
       }catch(err){
         console.error(err);
         document.getElementById("modalOkBtn").disabled = false;
-        document.getElementById("modalOkBtn").textContent = "Ok";
+        document.getElementById("modalOkBtn").textContent = "Confirm Payment";
         alert(err.message || "Checkout failed");
       }
     }
@@ -606,8 +958,8 @@
 
         cart = [];
         renderCart();
-        await loadProducts();
-        document.getElementById("paymentMethod").value = "Cash";
+        await loadAllData();
+        selectPaymentMethod("Cash");
         window.location.href = "ReceiptHistory.html";
       }catch(err){
         console.error(err);
@@ -618,7 +970,7 @@
     async function payNow(){
       try{
         if (cart.length === 0) {
-          alert("Cart empty");
+          alert("Your cart is empty");
           return;
         }
 
@@ -651,8 +1003,24 @@
       }
     }
 
+    // Keyboard Shortcuts: '/' to focus search, 'Esc' to clear search/close modal
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
+        e.preventDefault();
+        const searchInput = document.getElementById("search");
+        if(searchInput) searchInput.focus();
+      } else if (e.key === "Escape") {
+        const modal = document.getElementById("payModal");
+        if (modal && modal.classList.contains("show")) {
+          closePayModal();
+        } else {
+          clearSearch();
+        }
+      }
+    });
+
     if (guardLoginAndRole()) {
-      loadProducts();
+      loadAllData();
       renderCart();
     }
   </script>

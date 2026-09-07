@@ -178,6 +178,14 @@ function toggleSidebar() {
   navbar.classList.toggle("full");
   main.classList.toggle("full");
 }
+function go(page) {
+  window.location.href = page;
+}
+
+function logout() {
+  window.location.href = "login.html";
+}
+
 
 let SALES = [];
 let CURRENT_RECEIPT = null;
@@ -193,9 +201,9 @@ function formatDate(d) {
 
 function statusBadge(status) {
   const s = (status || "Completed").toLowerCase();
-  if (s === "pending") return '<span class="status pending">Pending</span>';
-  if (s === "cancelled") return '<span class="status cancelled">Cancelled</span>';
-  return '<span class="status completed">Completed</span>';
+  if (s === "pending") return '<span class="status pending"><i class="fas fa-clock"></i> Pending</span>';
+  if (s === "cancelled") return '<span class="status cancelled"><i class="fas fa-circle-xmark"></i> Cancelled</span>';
+  return '<span class="status completed"><i class="fas fa-circle-check"></i> Completed</span>';
 }
 
 function money(v) {
@@ -258,16 +266,18 @@ function renderSales() {
       <td>${s.staffName ?? ""}</td>
       <td>${s.paymentMethod ?? "-"}</td>
       <td>${statusBadge(s.status)}</td>
-      <td>${money(s.totalAmount)}</td>
-      <td>
-        <button class="btn" onclick="viewReceipt('${String(s.invoiceNo).replace(/'/g, "\\'")}')">
-          <i class="fas fa-eye"></i> View
-        </button>
-        ${IS_ADMIN ? `
-          <button class="btn red" onclick="deleteHistory('${String(s.invoiceNo).replace(/'/g, "\\'")}')">
-            <i class="fas fa-trash"></i> Delete
+      <td><strong>${money(s.totalAmount)}</strong></td>
+      <td class="action-cell">
+        <div class="action-btn-group">
+          <button class="btn btn-view" onclick="viewReceipt('${String(s.invoiceNo).replace(/'/g, "\\'")}')" title="View receipt">
+            <i class="fas fa-eye"></i> View
           </button>
-        ` : ``}
+          ${IS_ADMIN ? `
+            <button class="btn btn-delete red" onclick="deleteHistory('${String(s.invoiceNo).replace(/'/g, "\\'")}')" title="Delete receipt">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          ` : ``}
+        </div>
       </td>
     </tr>
   `).join("");

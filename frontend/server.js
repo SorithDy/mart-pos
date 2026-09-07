@@ -30,7 +30,9 @@ const pageRoutes = {
   "/promotions": "/Promotions.html",
   "/profile": "/Profile.html",
   "/account": "/Account.html",
-  "/low-stock": "/LowStock.html"
+  "/low-stock": "/LowStock.html",
+  "/branch": "/Branch.html",
+  "/branches": "/Branch.html"
 };
 
 const server = http.createServer((req, res) => {

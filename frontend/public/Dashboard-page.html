@@ -2,13 +2,17 @@
 <html lang="en">
 <head>
   <script src="runtime-config.js"></script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mart Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mart Dashboard - Analytics & Overview</title>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/pages/Dashboard-page.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/pages/Dashboard-page.css">
 </head>
 
 <body data-page="dashboard">
@@ -21,10 +25,10 @@
   </div>
 
   <ul>
-    <li><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+    <li class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
     <li onclick="go('POS.html')"><i class="fas fa-cash-register"></i> POS</li>
     <li onclick="go('LowStock.html')"><i class="fas fa-box"></i> Low Stock</li>
-    <li onclick="go('ReceiptHistory.html')"> <i class="fas fa-file-invoice"></i> Receipt History </li>
+    <li onclick="go('ReceiptHistory.html')"><i class="fas fa-file-invoice"></i> Receipt History</li>
     <li onclick="go('Product.html')"><i class="fas fa-boxes"></i> Products</li>
     <li onclick="go('ProductCategory.html')"><i class="fas fa-tags"></i> Category</li>
     <li onclick="go('Promotions.html')"><i class="fas fa-tags"></i> Promotions</li>
@@ -39,164 +43,279 @@
     <i class="fas fa-bars"></i>
   </button>
   <div class="nav-actions">
-    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard">
+    <button class="nav-icon-btn" type="button" onclick="go('Dashboard-page.html')" aria-label="Go to dashboard" title="Dashboard">
       <i class="fas fa-home"></i>
     </button>
-    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile">
+    <button class="nav-icon-btn" type="button" onclick="go('Profile.html')" aria-label="Profile" title="Profile">
       <i class="fas fa-user"></i>
     </button>
-    <button class="nav-icon-btn" type="button" aria-label="Settings">
-      <i class="fas fa-cog"></i>
+    <button class="nav-icon-btn" type="button" onclick="go('POS.html')" aria-label="POS Terminal" title="POS Terminal">
+      <i class="fas fa-cash-register"></i>
     </button>
   </div>
 </div>
 
 <!-- Main -->
 <div class="main" id="main">
-  <div class="title-bar">
-    <div>
-      <h2>Hello <strong>ADMIN</strong></h2>
-      <p>Mart Management Dashboard</p>
+
+  <!-- Top Header Bar -->
+  <div class="dashboard-header">
+    <div class="greeting-text">
+      <h2>Hello, <span id="adminGreetingName" style="color:#2563eb;">ADMIN</span> 👋</h2>
+      <p>
+        <span>Mart Management Dashboard</span>
+        <span class="dot-separator">•</span>
+        <span>Last Login: <span id="lastLogin">Just now</span></span>
+      </p>
     </div>
 
-    <button class="refresh-btn" onclick="refreshAll()">
-      <i class="fas fa-rotate-right"></i> Refresh Data
-    </button>
+    <div class="header-actions">
+      <button class="btn-pos-quick" onclick="go('POS.html')">
+        <i class="fas fa-cash-register"></i> Open POS
+      </button>
+
+      <button class="refresh-btn" id="refreshBtn" onclick="refreshAllWithAnim()">
+        <i class="fas fa-rotate" id="refreshIcon"></i> Refresh Data
+      </button>
+    </div>
   </div>
 
-  <p class="muted">Last Login: <span id="lastLogin"></span></p>
-
+  <!-- Modern 6-Stats Grid (Rich Gradients & Glass Elements) -->
   <section class="stats-grid">
-    <article class="stat-card blue">
-      <div class="stat-main">
-        <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
-        <div class="stat-copy">
-          <small>Total Products</small>
-          <h3 id="totalProducts">Loading...</h3>
-          <div class="stat-delta">Increase by <span class="delta-pill" id="deltaProducts">+0</span> this week</div>
+
+    <!-- 1. Total Products -->
+    <article class="stat-card card-blue">
+      <div class="stat-header-row">
+        <span class="stat-label">Total Products</span>
+        <div class="stat-glass-icon"><i class="fas fa-cubes"></i></div>
+      </div>
+
+      <div class="stat-body-row">
+        <div class="stat-val" id="totalProducts">Loading...</div>
+        <div class="stat-sparkline-box">
+          <svg viewBox="0 0 76 32" fill="none">
+            <defs>
+              <linearGradient id="gradBlue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+            <path d="M2 22 L14 14 L26 19 L38 12 L50 16 L62 6 L74 15 L74 32 L2 32 Z" fill="url(#gradBlue)"/>
+            <path d="M2 22 L14 14 L26 19 L38 12 L50 16 L62 6 L74 15" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
       </div>
-      <div class="stat-spark">
-        <svg viewBox="0 0 100 50" fill="none">
-          <path d="M5 35 L20 22 L33 30 L48 27 L61 29 L75 16 L90 34" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M5 46 H95" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="4 4"/>
-        </svg>
+
+      <div class="stat-footer-row">
+        <span class="stat-trend-chip">
+          <i class="fas fa-arrow-trend-up"></i>
+          <span id="deltaProducts">+0</span>
+        </span>
+        <span class="stat-trend-desc">added this week</span>
       </div>
     </article>
 
-    <article class="stat-card green">
-      <div class="stat-main">
-        <div class="stat-icon"><i class="fas fa-users"></i></div>
-        <div class="stat-copy">
-          <small>Total Employees</small>
-          <h3 id="totalEmployee">Loading...</h3>
-          <div class="stat-delta">Increase by <span class="delta-pill" id="deltaEmployees">+0</span> this week</div>
+    <!-- 2. Total Employees -->
+    <article class="stat-card card-green">
+      <div class="stat-header-row">
+        <span class="stat-label">Total Employees</span>
+        <div class="stat-glass-icon"><i class="fas fa-users"></i></div>
+      </div>
+
+      <div class="stat-body-row">
+        <div class="stat-val" id="totalEmployee">Loading...</div>
+        <div class="stat-sparkline-box">
+          <svg viewBox="0 0 76 32" fill="none">
+            <defs>
+              <linearGradient id="gradGreen" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+            <path d="M2 18 L14 10 L26 17 L38 11 L50 18 L62 7 L74 16 L74 32 L2 32 Z" fill="url(#gradGreen)"/>
+            <path d="M2 18 L14 10 L26 17 L38 11 L50 18 L62 7 L74 16" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
       </div>
-      <div class="stat-spark">
-        <svg viewBox="0 0 100 50" fill="none">
-          <path d="M5 22 L17 14 L28 22 L40 18 L52 28 L64 12 L79 20 L92 30" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M5 46 H95" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="4 4"/>
-        </svg>
+
+      <div class="stat-footer-row">
+        <span class="stat-trend-chip">
+          <i class="fas fa-user-plus"></i>
+          <span id="deltaEmployees">+0</span>
+        </span>
+        <span class="stat-trend-desc">active this week</span>
       </div>
     </article>
 
-    <article class="stat-card orange">
-      <div class="stat-main">
-        <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-        <div class="stat-copy">
-          <small>Total Sales</small>
-          <h3 id="totalRevenue">Loading...</h3>
-          <div class="stat-delta">Increase by <span class="delta-pill" id="deltaRevenue">+$0</span> this week</div>
+    <!-- 3. Total Sales -->
+    <article class="stat-card card-purple">
+      <div class="stat-header-row">
+        <span class="stat-label">Total Sales</span>
+        <div class="stat-glass-icon"><i class="fas fa-dollar-sign"></i></div>
+      </div>
+
+      <div class="stat-body-row">
+        <div class="stat-val" id="totalRevenue">Loading...</div>
+        <div class="stat-sparkline-box">
+          <svg viewBox="0 0 76 32" fill="none">
+            <defs>
+              <linearGradient id="gradPurple" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+            <path d="M2 20 L14 12 L26 18 L38 14 L50 9 L62 13 L74 5 L74 32 L2 32 Z" fill="url(#gradPurple)"/>
+            <path d="M2 20 L14 12 L26 18 L38 14 L50 9 L62 13 L74 5" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
       </div>
-      <div class="stat-spark">
-        <svg viewBox="0 0 100 50" fill="none">
-          <path d="M5 32 L18 20 L30 28 L43 29 L56 19 L68 25 L80 12 L92 34" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M5 46 H95" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="4 4"/>
-        </svg>
+
+      <div class="stat-footer-row">
+        <span class="stat-trend-chip">
+          <i class="fas fa-arrow-trend-up"></i>
+          <span id="deltaRevenue">+$0.00</span>
+        </span>
+        <span class="stat-trend-desc">revenue this week</span>
       </div>
     </article>
 
-    <article class="stat-card violet">
-      <div class="stat-main">
-        <div class="stat-icon"><i class="fas fa-receipt"></i></div>
-        <div class="stat-copy">
-          <small>Total Invoices</small>
-          <h3 id="cardInvoices">0</h3>
-          <div class="stat-delta">Processed <span class="delta-pill" id="deltaInvoices">+0</span> this week</div>
+    <!-- 4. Total Invoices -->
+    <article class="stat-card card-amber">
+      <div class="stat-header-row">
+        <span class="stat-label">Total Invoices</span>
+        <div class="stat-glass-icon"><i class="fas fa-receipt"></i></div>
+      </div>
+
+      <div class="stat-body-row">
+        <div class="stat-val" id="cardInvoices">0</div>
+        <div class="stat-sparkline-box">
+          <svg viewBox="0 0 76 32" fill="none">
+            <defs>
+              <linearGradient id="gradAmber" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+            <path d="M2 19 L14 11 L26 16 L38 12 L50 17 L62 8 L74 14 L74 32 L2 32 Z" fill="url(#gradAmber)"/>
+            <path d="M2 19 L14 11 L26 16 L38 12 L50 17 L62 8 L74 14" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
       </div>
-      <div class="stat-spark">
-        <svg viewBox="0 0 100 50" fill="none">
-          <path d="M5 26 L18 16 L31 24 L43 21 L56 26 L68 14 L80 30 L92 10" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M5 46 H95" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="4 4"/>
-        </svg>
+
+      <div class="stat-footer-row">
+        <span class="stat-trend-chip">
+          <i class="fas fa-file-invoice"></i>
+          <span id="deltaInvoices">+0</span>
+        </span>
+        <span class="stat-trend-desc">processed this week</span>
       </div>
     </article>
 
-    <article class="stat-card pink">
-      <div class="stat-main">
-        <div class="stat-icon"><i class="fas fa-bag-shopping"></i></div>
-        <div class="stat-copy">
-          <small>Average Sale</small>
-          <h3 id="avgSale">Loading...</h3>
-          <div class="stat-delta">Value by <span class="delta-pill" id="deltaAvgSale">+$0</span> this week</div>
+    <!-- 5. Average Sale -->
+    <article class="stat-card card-rose">
+      <div class="stat-header-row">
+        <span class="stat-label">Average Sale</span>
+        <div class="stat-glass-icon"><i class="fas fa-bag-shopping"></i></div>
+      </div>
+
+      <div class="stat-body-row">
+        <div class="stat-val" id="avgSale">Loading...</div>
+        <div class="stat-sparkline-box">
+          <svg viewBox="0 0 76 32" fill="none">
+            <defs>
+              <linearGradient id="gradRose" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+            <path d="M2 20 L14 13 L26 18 L38 10 L50 14 L62 6 L74 11 L74 32 L2 32 Z" fill="url(#gradRose)"/>
+            <path d="M2 20 L14 13 L26 18 L38 10 L50 14 L62 6 L74 11" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
       </div>
-      <div class="stat-spark">
-        <svg viewBox="0 0 100 50" fill="none">
-          <path d="M5 30 L18 18 L30 24 L43 22 L55 28 L68 17 L80 26 L92 11" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M5 46 H95" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="4 4"/>
-        </svg>
+
+      <div class="stat-footer-row">
+        <span class="stat-trend-chip">
+          <i class="fas fa-chart-line"></i>
+          <span id="deltaAvgSale">+$0.00</span>
+        </span>
+        <span class="stat-trend-desc">order value this week</span>
       </div>
     </article>
 
-    <article class="stat-card cyan">
-      <div class="stat-main">
-        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-        <div class="stat-copy">
-          <small>Completed Sales</small>
-          <h3 id="completedSales">0</h3>
-          <div class="stat-delta">Success rate <span class="delta-pill" id="deltaCompleted">0%</span> this week</div>
+    <!-- 6. Completed Sales -->
+    <article class="stat-card card-cyan">
+      <div class="stat-header-row">
+        <span class="stat-label">Completed Sales</span>
+        <div class="stat-glass-icon"><i class="fas fa-circle-check"></i></div>
+      </div>
+
+      <div class="stat-body-row">
+        <div class="stat-val" id="completedSales">0</div>
+        <div class="stat-sparkline-box">
+          <svg viewBox="0 0 76 32" fill="none">
+            <defs>
+              <linearGradient id="gradCyan" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+            <path d="M2 21 L14 14 L26 16 L38 11 L50 15 L62 7 L74 9 L74 32 L2 32 Z" fill="url(#gradCyan)"/>
+            <path d="M2 21 L14 14 L26 16 L38 11 L50 15 L62 7 L74 9" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
       </div>
-      <div class="stat-spark">
-        <svg viewBox="0 0 100 50" fill="none">
-          <path d="M5 28 L20 18 L32 24 L46 22 L58 27 L70 19 L82 26 L92 12" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M5 46 H95" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="4 4"/>
-        </svg>
+
+      <div class="stat-footer-row">
+        <span class="stat-trend-chip">
+          <i class="fas fa-percent"></i>
+          <span id="deltaCompleted">100%</span>
+        </span>
+        <span class="stat-trend-desc">fulfillment rate</span>
       </div>
     </article>
+
   </section>
 
-  <section class="panel">
+  <!-- Earning Statistic Panel -->
+  <section class="panel earning-panel">
     <div class="panel-head">
       <div>
         <h3>Earning Statistic</h3>
-        <p>Yearly earning overview</p>
+        <p>Yearly earning overview & financial projections</p>
       </div>
       <select class="select-chip" aria-label="Earnings period">
         <option>Yearly</option>
+        <option>Monthly</option>
+        <option>Weekly</option>
       </select>
     </div>
 
-    <div class="mini-tabs">
-      <div class="mini-tab active">
-        <i class="fas fa-cart-shopping"></i>
-        <div><span>Sales</span><strong id="tabSales">$0</strong></div>
+    <div class="mini-tabs" id="earningTabs">
+      <div class="mini-tab active" data-metric="sales" onclick="switchMetric('sales')">
+        <div class="tab-icon-box"><i class="fas fa-shopping-cart"></i></div>
+        <div class="tab-meta">
+          <span class="tab-label">Sales</span>
+          <strong id="tabSales">$0.00</strong>
+        </div>
       </div>
-      <div class="mini-tab">
-        <i class="fas fa-wallet"></i>
-        <div><span>Income</span><strong id="tabIncome">$0</strong></div>
+      <div class="mini-tab" data-metric="income" onclick="switchMetric('income')">
+        <div class="tab-icon-box"><i class="fas fa-wallet"></i></div>
+        <div class="tab-meta">
+          <span class="tab-label">Income</span>
+          <strong id="tabIncome">$0.00</strong>
+        </div>
       </div>
-      <div class="mini-tab">
-        <i class="fas fa-hand-holding-dollar"></i>
-        <div><span>Profit</span><strong id="tabProfit">$0</strong></div>
+      <div class="mini-tab" data-metric="profit" onclick="switchMetric('profit')">
+        <div class="tab-icon-box"><i class="fas fa-hand-holding-dollar"></i></div>
+        <div class="tab-meta">
+          <span class="tab-label">Profit</span>
+          <strong id="tabProfit">$0.00</strong>
+        </div>
       </div>
     </div>
 
-    <div class="chart-wrap">
+    <div class="chart-wrap" id="chartContainer">
       <div class="y-axis">
         <span>$100k</span>
         <span>$75k</span>
@@ -206,21 +325,26 @@
       </div>
       <div class="chart-bars" id="chartBars"></div>
       <div class="chart-line">
-        <svg id="chartSvg" viewBox="0 0 1000 220" preserveAspectRatio="none"></svg>
+        <svg id="chartSvg" viewBox="0 0 1000 200" preserveAspectRatio="none"></svg>
       </div>
       <div class="x-axis" id="chartMonths"></div>
-      <div class="chart-tooltip">
-        <strong id="tooltipMonth">Mar 2026</strong>
-        <span><i class="fas fa-circle legend-dot"></i> Sales: <b id="tooltipValue">$0</b></span>
+      <div class="chart-tooltip" id="chartTooltip">
+        <strong id="tooltipMonth">Sep 2026</strong>
+        <div class="tooltip-body">
+          <span class="tooltip-dot"></span>
+          <span id="tooltipLabel">Sales:</span>
+          <b id="tooltipValue">$0.00</b>
+        </div>
       </div>
     </div>
   </section>
 
+  <!-- Recent Sales Invoices Section -->
   <section class="table-card">
     <div class="table-head">
       <div>
         <h3>Recent Sales</h3>
-        <p>Latest invoice activity</p>
+        <p>Latest invoice and transaction activity</p>
       </div>
     </div>
 
@@ -234,7 +358,7 @@
       </thead>
 
       <tbody id="salesBody">
-        <tr><td colspan="3" class="muted">Loading...</td></tr>
+        <tr><td colspan="3" class="muted" style="text-align:center;padding:16px;">Loading sales...</td></tr>
       </tbody>
 
       <tfoot>
@@ -242,7 +366,7 @@
           <td colspan="3">
             <div class="tfoot-summary">
               <div class="label">
-                <i class="fas fa-receipt"></i>
+                <i class="fas fa-receipt" style="color:#2563eb;"></i>
                 <span>Total Invoice</span>
               </div>
               <span class="tfoot-badge" id="totalInvoice">0</span>
@@ -270,87 +394,188 @@ function toggleSidebar() {
   navbar.classList.toggle("full");
   main.classList.toggle("full");
 }
+
 function go(page){ window.location.href = page; }
-function logout(){ window.location.href="/login.html"; }
+function logout(){ 
+  localStorage.removeItem("martUser");
+  window.location.href = "login.html"; 
+}
+
+// User Profile greeting
+try {
+  const user = JSON.parse(localStorage.getItem("martUser") || "null");
+  if(user && (user.fullName || user.username)) {
+    document.getElementById("adminGreetingName").textContent = (user.fullName || user.username).toUpperCase();
+  }
+} catch {}
 
 document.getElementById("lastLogin").textContent = new Date().toLocaleString();
+
 const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTH_FACTORS = [0.52, 0.65, 0.80, 0.72, 0.86, 0.54, 0.68, 0.82, 0.88, 0.88, 0.58, 0.72];
 const DASHBOARD_STATE={ totalProducts:0, totalRevenue:0, totalEmployees:0, sales:[] };
+let CURRENT_METRIC = "sales";
+let SELECTED_MONTH_INDEX = 8; // Default Sep (index 8)
 
 function formatCurrency(value){
   return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:2}).format(Number(value||0));
 }
 
-function renderOverview(){
-  const sales=DASHBOARD_STATE.sales || [];
-  const invoices=sales.length;
-  const completed=sales.filter(s => !String(s.status || "Completed").toLowerCase().includes("pending") && !String(s.status || "").toLowerCase().includes("cancel")).length;
-  const avgSale=invoices ? DASHBOARD_STATE.totalRevenue / invoices : 0;
-  const estimatedIncome=DASHBOARD_STATE.totalRevenue * .78;
-  const estimatedProfit=DASHBOARD_STATE.totalRevenue - estimatedIncome;
-
-  document.getElementById("deltaProducts").textContent=`+${Math.max(1, Math.ceil(DASHBOARD_STATE.totalProducts * .12))}`;
-  document.getElementById("deltaEmployees").textContent=`+${Math.max(1, Math.ceil(DASHBOARD_STATE.totalEmployees * .08))}`;
-  document.getElementById("deltaRevenue").textContent=formatCurrency(DASHBOARD_STATE.totalRevenue * .09);
-  document.getElementById("cardInvoices").textContent=invoices.toLocaleString();
-  document.getElementById("deltaInvoices").textContent=`+${Math.max(1, Math.ceil(invoices * .15))}`;
-  document.getElementById("avgSale").textContent=formatCurrency(avgSale);
-  document.getElementById("deltaAvgSale").textContent=formatCurrency(avgSale * .07);
-  document.getElementById("completedSales").textContent=completed.toLocaleString();
-  document.getElementById("deltaCompleted").textContent=`${invoices ? Math.round((completed / invoices) * 100) : 0}%`;
-
-  document.getElementById("tabSales").textContent=formatCurrency(DASHBOARD_STATE.totalRevenue);
-  document.getElementById("tabIncome").textContent=formatCurrency(estimatedIncome);
-  document.getElementById("tabProfit").textContent=formatCurrency(estimatedProfit);
-
-  renderChart(DASHBOARD_STATE.totalRevenue);
+function switchMetric(metric) {
+  CURRENT_METRIC = metric;
+  document.querySelectorAll("#earningTabs .mini-tab").forEach(tab => {
+    if (tab.dataset.metric === metric) {
+      tab.classList.add("active");
+    } else {
+      tab.classList.remove("active");
+    }
+  });
+  renderChart();
 }
 
-function renderChart(totalValue){
+function selectMonth(index) {
+  SELECTED_MONTH_INDEX = index;
+  renderChart();
+}
+
+function renderOverview(){
+  const sales = DASHBOARD_STATE.sales || [];
+  const invoices = sales.length;
+  const completed = sales.filter(s => !String(s.status || "Completed").toLowerCase().includes("pending") && !String(s.status || "").toLowerCase().includes("cancel")).length;
+  const avgSale = invoices ? DASHBOARD_STATE.totalRevenue / invoices : 0;
+  const estimatedIncome = DASHBOARD_STATE.totalRevenue * .78;
+  const estimatedProfit = DASHBOARD_STATE.totalRevenue - estimatedIncome;
+
+  document.getElementById("deltaProducts").textContent = `+${Math.max(1, Math.ceil(DASHBOARD_STATE.totalProducts * .12))}`;
+  document.getElementById("deltaEmployees").textContent = `+${Math.max(1, Math.ceil(DASHBOARD_STATE.totalEmployees * .08))}`;
+  document.getElementById("deltaRevenue").textContent = formatCurrency(DASHBOARD_STATE.totalRevenue * .09);
+  document.getElementById("cardInvoices").textContent = invoices.toLocaleString();
+  document.getElementById("deltaInvoices").textContent = `+${Math.max(1, Math.ceil(invoices * .15))}`;
+  document.getElementById("avgSale").textContent = formatCurrency(avgSale);
+  document.getElementById("deltaAvgSale").textContent = formatCurrency(avgSale * .07);
+  document.getElementById("completedSales").textContent = completed.toLocaleString();
+  document.getElementById("deltaCompleted").textContent = `${invoices ? Math.round((completed / invoices) * 100) : 100}%`;
+
+  document.getElementById("tabSales").textContent = formatCurrency(DASHBOARD_STATE.totalRevenue);
+  document.getElementById("tabIncome").textContent = formatCurrency(estimatedIncome);
+  document.getElementById("tabProfit").textContent = formatCurrency(estimatedProfit);
+
+  renderChart();
+}
+
+function getSmoothPath(points) {
+  if (!points || points.length === 0) return "";
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i === 0 ? i : i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2 < points.length ? i + 2 : i + 1];
+
+    const cp1x = p1.x + (p2.x - p0.x) / 5.5;
+    const cp1y = p1.y + (p2.y - p0.y) / 5.5;
+    const cp2x = p2.x - (p3.x - p1.x) / 5.5;
+    const cp2y = p2.y - (p3.y - p1.y) / 5.5;
+
+    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
+
+function renderChart(){
   const bars=document.getElementById("chartBars");
   const months=document.getElementById("chartMonths");
   const svg=document.getElementById("chartSvg");
+  const tooltip=document.getElementById("chartTooltip");
   const tooltipMonth=document.getElementById("tooltipMonth");
+  const tooltipLabel=document.getElementById("tooltipLabel");
   const tooltipValue=document.getElementById("tooltipValue");
-  const nowMonthIndex=new Date().getMonth();
 
-  const values=MONTHS.map((_, index) => {
-    const wave=0.55 + (((index * 17) % 40) / 100);
-    const seasonal=index === nowMonthIndex ? 0.88 : (0.38 + ((index % 5) * 0.1));
-    return Math.round((totalValue || 1000) * Math.min(1, (wave + seasonal) / 1.6));
+  let baseValue = DASHBOARD_STATE.totalRevenue;
+  let metricLabel = "Sales:";
+  if (CURRENT_METRIC === "income") {
+    baseValue = DASHBOARD_STATE.totalRevenue * 0.78;
+    metricLabel = "Income:";
+  } else if (CURRENT_METRIC === "profit") {
+    baseValue = DASHBOARD_STATE.totalRevenue * 0.22;
+    metricLabel = "Profit:";
+  }
+
+  const values = MONTH_FACTORS.map((factor) => {
+    return (baseValue || 60) * factor;
   });
 
-  const maxValue=Math.max(...values, 1);
+  const maxValue = Math.max(...values, 1);
 
-  bars.innerHTML=values.map((value, index) => {
-    const height=Math.max(24, Math.round((value / maxValue) * 100));
-    const active=index === nowMonthIndex ? "active" : "";
-    return `<div class="bar ${active}" data-height="${height}"></div>`;
-  }).join("");
-  bars.querySelectorAll(".bar").forEach((bar) => {
-    bar.style.height = `${bar.dataset.height}%`;
-  });
-
-  months.innerHTML=MONTHS.map((month, index) => {
-    const active=index === nowMonthIndex ? "active" : "";
-    return `<span class="${active}">${month}</span>`;
+  bars.innerHTML = values.map((value, index) => {
+    const height = Math.max(24, Math.round((value / maxValue) * 90));
+    const active = index === SELECTED_MONTH_INDEX ? "active" : "";
+    const delay = (index * 0.04).toFixed(2);
+    return `<div class="bar ${active}" onclick="selectMonth(${index})" style="height:${height}%;animation-delay:${delay}s;" title="${MONTHS[index]}: ${formatCurrency(value)}"></div>`;
   }).join("");
 
-  const points=values.map((value, index) => {
-    const x=(index / (values.length - 1)) * 1000;
-    const y=220 - ((value / maxValue) * 180) - 10;
+  months.innerHTML = MONTHS.map((month, index) => {
+    const active = index === SELECTED_MONTH_INDEX ? "active" : "";
+    return `<span class="${active}" onclick="selectMonth(${index})">${month}</span>`;
+  }).join("");
+
+  const points = values.map((value, index) => {
+    const x = 30 + (index / (values.length - 1)) * 940;
+    const y = 185 - ((value / maxValue) * 145);
     return { x, y };
   });
 
-  const line=points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
-  const dots=points.map(point => `<circle cx="${point.x}" cy="${point.y}" r="8" fill="#fff" stroke="#4c7cf7" stroke-width="4"></circle>`).join("");
-  svg.innerHTML=`
-    <path d="${line}" fill="none" stroke="#4c7cf7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+  const pathString = getSmoothPath(points);
+  const firstPoint = points[0];
+  const lastPoint = points[points.length - 1];
+  const areaPathString = `${pathString} L ${lastPoint.x} 190 L ${firstPoint.x} 190 Z`;
+
+  const dots = points.map((point, index) => {
+    const isActive = index === SELECTED_MONTH_INDEX;
+    const r = isActive ? 7.5 : 5.5;
+    const strokeW = isActive ? 4 : 3;
+    const delay = (index * 0.10 + 0.12).toFixed(2);
+    return `<circle class="chart-dot" cx="${point.x}" cy="${point.y}" r="${r}" fill="#fff" stroke="#2563eb" stroke-width="${strokeW}" style="cursor:pointer;animation-delay:${delay}s;" onclick="selectMonth(${index})"></circle>`;
+  }).join("");
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="chartLineGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2563eb" stop-opacity="0.28"/>
+        <stop offset="100%" stop-color="#2563eb" stop-opacity="0.0"/>
+      </linearGradient>
+    </defs>
+    <path class="chart-area-path" d="${areaPathString}" fill="url(#chartLineGrad)"></path>
+    <path class="chart-line-path" id="animatedChartPath" d="${pathString}" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
     ${dots}
   `;
 
-  tooltipMonth.textContent=`${MONTHS[nowMonthIndex]} 2026`;
-  tooltipValue.textContent=formatCurrency(values[nowMonthIndex]);
+  // Trigger SVG stroke path length calculation for silky-smooth animation
+  const animatedPath = document.getElementById("animatedChartPath");
+  if (animatedPath) {
+    try {
+      const length = Math.ceil(animatedPath.getTotalLength() || 2000);
+      animatedPath.style.strokeDasharray = length;
+      animatedPath.style.strokeDashoffset = length;
+      animatedPath.getBoundingClientRect(); // trigger reflow
+      animatedPath.style.animation = "drawChartPath 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards";
+    } catch {}
+  }
+
+  const selectedValue = values[SELECTED_MONTH_INDEX] || 0;
+  tooltipMonth.textContent = `${MONTHS[SELECTED_MONTH_INDEX]} 2026`;
+  tooltipLabel.textContent = metricLabel;
+  tooltipValue.textContent = formatCurrency(selectedValue);
+
+  const pct = (SELECTED_MONTH_INDEX / 11) * 100;
+  if (pct > 70) {
+    tooltip.style.left = "auto";
+    tooltip.style.right = `${Math.max(5, (100 - pct) * 0.75)}%`;
+  } else {
+    tooltip.style.right = "auto";
+    tooltip.style.left = `${Math.max(10, pct * 0.85 + 6)}%`;
+  }
 }
 
 function refreshAll(){
@@ -360,93 +585,102 @@ function refreshAll(){
   loadRecentSales();
 }
 
+function refreshAllWithAnim(){
+  const icon = document.getElementById("refreshIcon");
+  if(icon) icon.classList.add("rotating");
+  refreshAll();
+  setTimeout(() => {
+    if(icon) icon.classList.remove("rotating");
+  }, 800);
+}
+
 async function loadTotalProducts(){
-  const el=document.getElementById("totalProducts");
+  const el = document.getElementById("totalProducts");
   try{
-    const res=await fetch("/api/total-products");
-    if(!res.ok) return el.textContent="API Error";
-    const data=await res.json();
-    DASHBOARD_STATE.totalProducts=Number(data.totalProducts ?? 0);
-    el.textContent=DASHBOARD_STATE.totalProducts.toLocaleString();
+    const res = await fetch("/api/total-products");
+    if(!res.ok) return el.textContent = "—";
+    const data = await res.json();
+    DASHBOARD_STATE.totalProducts = Number(data.totalProducts ?? 0);
+    el.textContent = DASHBOARD_STATE.totalProducts.toLocaleString();
     renderOverview();
-  }catch{ el.textContent="Error"; }
+  }catch{ el.textContent = "—"; }
 }
 
 async function loadTotalRevenue(){
-  const el=document.getElementById("totalRevenue");
+  const el = document.getElementById("totalRevenue");
   try{
-    const res=await fetch("/api/total-revenue");
-    if(!res.ok) return el.textContent="API Error";
-    const data=await res.json();
+    const res = await fetch("/api/total-revenue");
+    if(!res.ok) return el.textContent = "—";
+    const data = await res.json();
     const value = Number(data.totalRevenue ?? 0);
-    DASHBOARD_STATE.totalRevenue=value;
+    DASHBOARD_STATE.totalRevenue = value;
     el.textContent = formatCurrency(value);
     renderOverview();
-  }catch{ el.textContent="Error"; }
+  }catch{ el.textContent = "—"; }
 }
 
 async function loadTotalEmployees(){
-  const el=document.getElementById("totalEmployee");
+  const el = document.getElementById("totalEmployee");
   try{
-    const res=await fetch("/api/total-employees");
-    if(!res.ok) return el.textContent="API Error";
-    const data=await res.json();
-    DASHBOARD_STATE.totalEmployees=Number(data.totalEmployees ?? 0);
-    el.textContent=DASHBOARD_STATE.totalEmployees.toLocaleString();
+    const res = await fetch("/api/total-employees");
+    if(!res.ok) return el.textContent = "—";
+    const data = await res.json();
+    DASHBOARD_STATE.totalEmployees = Number(data.totalEmployees ?? 0);
+    el.textContent = DASHBOARD_STATE.totalEmployees.toLocaleString();
     renderOverview();
-  }catch{ el.textContent="Error"; }
+  }catch{ el.textContent = "—"; }
 }
 
 function formatDate(d){
   if(!d) return "—";
-  const date=new Date(d);
+  const date = new Date(d);
   if(isNaN(date.getTime())) return "—";
   return date.toLocaleDateString();
 }
 
 function statusBadge(status){
-  const s=(status||"Completed").toString();
-  const lower=s.toLowerCase();
-  let cls="status";
-  if(lower.includes("pending")) cls+=" pending";
-  if(lower.includes("cancel")) cls+=" cancelled";
+  const s = (status || "Completed").toString();
+  const lower = s.toLowerCase();
+  let cls = "status";
+  if(lower.includes("pending")) cls += " pending";
+  if(lower.includes("cancel")) cls += " cancelled";
   return `<span class="${cls}">${s}</span>`;
 }
 
 async function loadRecentSales(){
-  const body=document.getElementById("salesBody");
-  const total=document.getElementById("totalInvoice");
+  const body = document.getElementById("salesBody");
+  const total = document.getElementById("totalInvoice");
 
   try{
-    const res=await fetch("/api/recent-sales");
+    const res = await fetch("/api/recent-sales");
     if(!res.ok){
-      body.innerHTML=`<tr><td colspan="3" class="muted">API Error</td></tr>`;
-      total.textContent="0";
+      body.innerHTML = `<tr><td colspan="3" class="muted" style="text-align:center;padding:16px;">API Error</td></tr>`;
+      total.textContent = "0";
       return;
     }
 
-    const data=await res.json();
-    const sales=data.sales || [];
-    DASHBOARD_STATE.sales=sales;
+    const data = await res.json();
+    const sales = data.sales || [];
+    DASHBOARD_STATE.sales = sales;
     total.textContent = sales.length;
     renderOverview();
 
-    if(sales.length===0){
-      body.innerHTML=`<tr><td colspan="3" class="muted">No sales found</td></tr>`;
+    if(sales.length === 0){
+      body.innerHTML = `<tr><td colspan="3" class="muted" style="text-align:center;padding:16px;">No sales found</td></tr>`;
       return;
     }
 
-    body.innerHTML=sales.map(s=>`
+    body.innerHTML = sales.map(s => `
       <tr>
-        <td>${s.invoiceNo ?? "—"}</td>
+        <td><strong>#${s.invoiceNo ?? "—"}</strong></td>
         <td>${formatDate(s.saleDate)}</td>
         <td>${statusBadge(s.status)}</td>
       </tr>
     `).join("");
 
   }catch{
-    body.innerHTML=`<tr><td colspan="3" class="muted">Error loading sales</td></tr>`;
-    total.textContent="0";
+    body.innerHTML = `<tr><td colspan="3" class="muted" style="text-align:center;padding:16px;">Error loading sales</td></tr>`;
+    total.textContent = "0";
   }
 }
 

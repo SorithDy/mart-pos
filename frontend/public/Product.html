@@ -372,8 +372,10 @@ function renderProducts(){
         <td>$${Number(p.buyPrice ?? 0)}</td>
         <td>$${Number(p.salePrice ?? 0)}</td>
         <td>${IS_ADMIN ? `
-          <button class="btn small" onclick="openModalForEdit('${p.productCode}')"><i class="fas fa-pen"></i> Edit</button>
-          <button class="btn small red" onclick="deleteProduct('${p.productCode}')"><i class="fas fa-trash"></i> Delete</button>
+          <div class="action-btn-group">
+            <button class="btn small" onclick="openModalForEdit('${p.productCode}')"><i class="fas fa-pen"></i> Edit</button>
+            <button class="btn small red" onclick="deleteProduct('${p.productCode}')"><i class="fas fa-trash"></i> Delete</button>
+          </div>
         ` : `<span style="color:#777;">Admin only</span>`}</td>
       </tr>
     `;
