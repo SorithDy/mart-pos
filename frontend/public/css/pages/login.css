@@ -479,9 +479,43 @@ body{
   box-shadow:0 20px 34px rgba(16,24,40,.18);
 }
 
+.actions button.is-loading,
+.actions button:disabled{
+  cursor:wait;
+  opacity:.82;
+  transform:none;
+}
+
+.actions button.is-loading{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.login-spinner{
+  display:none;
+  width:17px;
+  height:17px;
+  border:2px solid rgba(255,255,255,.38);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:loginSpin .7s linear infinite;
+}
+
+.actions button.is-loading .login-spinner{
+  display:inline-block;
+}
+
 .actions button:hover{
   transform:translateY(-1px);
   box-shadow:0 24px 40px rgba(16,24,40,.22);
+}
+
+.actions button.is-loading:hover,
+.actions button:disabled:hover{
+  transform:none;
+  box-shadow:0 20px 34px rgba(16,24,40,.18);
 }
 
 .actions button:active{
@@ -546,6 +580,14 @@ body{
     opacity:1;
     transform:translateY(0);
   }
+}
+
+@keyframes loginSpin{
+  to{transform:rotate(360deg)}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .login-spinner{animation-duration:1.5s}
 }
 
 @media (max-width: 1024px){

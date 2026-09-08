@@ -78,7 +78,10 @@
         </div>
 
         <div class="actions">
-          <button type="button" onclick="login()">Sign In</button>
+          <button type="button" id="loginButton" onclick="login()" aria-label="Sign in">
+            <span class="login-button-label">Sign In</span>
+            <span class="login-spinner" aria-hidden="true"></span>
+          </button>
         </div>
       </div>
 
@@ -141,16 +144,32 @@ function togglePassword(){
   icon.className = isPassword ? "fas fa-eye-slash" : "fas fa-eye";
 }
 
+function setLoginLoading(isLoading){
+  const button = document.getElementById("loginButton");
+  const label = button.querySelector(".login-button-label");
+  const spinner = button.querySelector(".login-spinner");
+
+  button.disabled = isLoading;
+  button.setAttribute("aria-busy", String(isLoading));
+  button.classList.toggle("is-loading", isLoading);
+  label.textContent = isLoading ? "Signing in..." : "Sign In";
+  spinner.setAttribute("aria-hidden", String(!isLoading));
+}
+
 async function login(){
   const username = document.getElementById("user").value.trim();
   const password = document.getElementById("pass").value.trim();
+  const button = document.getElementById("loginButton");
 
+  if(button.disabled) return;
   showError("");
 
   if(!username || !password){
     showError("Enter username and password");
     return;
   }
+
+  setLoginLoading(true);
 
   try{
     const res = await fetch("/api/login", {
@@ -163,6 +182,7 @@ async function login(){
 
     if(!res.ok){
       showError(data.message || "Login failed");
+      setLoginLoading(false);
       return;
     }
 
@@ -170,6 +190,7 @@ async function login(){
     window.location.href = "/Dashboard-page.html";
   }catch(err){
     showError("Server error");
+    setLoginLoading(false);
   }
 }
 
