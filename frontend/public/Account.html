@@ -7,6 +7,7 @@
   <title>Accounts - Mart Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="css/pages/Account.css">
+  <link rel="stylesheet" href="css/shared-sidebar.css">
 </head>
 <body data-page="account">
 
@@ -174,7 +175,7 @@ function toggleSidebar(){
   main.classList.toggle("full");
 }
 
-function go(p){ window.location.href = p; }
+function go(p){ (window.navigateToPage || function(x){ window.location.href = x; })(p); }
 
 function resetSearchBox(){
   const searchInput = document.getElementById("q");

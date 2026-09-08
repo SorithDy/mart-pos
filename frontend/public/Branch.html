@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="css/pages/Branch.css">
+  <link rel="stylesheet" href="css/shared-sidebar.css">
 </head>
 
 <body data-page="branch">
@@ -50,28 +51,21 @@
     </button>
   </div>
 
-  <div class="table-card">
-    <table>
-      <thead>
-        <tr>
-          <th style="width: 100px;">Branch Code</th>
-          <th>Branch Name</th>
-          <th>Address / Location</th>
-          <th style="width: 140px;">Phone</th>
-          <th style="width: 120px;">Status</th>
-          <th style="width: 210px;">Action</th>
-        </tr>
-      </thead>
-      <tbody id="branchTableBody">
-        <tr><td colspan="6" style="text-align:center;">Loading branches...</td></tr>
-      </tbody>
-    </table>
+  <div class="branch-grid" id="branchTableBody">
+    <div class="empty-state">Loading branches...</div>
   </div>
 </div>
 
 <!-- Add / Edit Modal -->
 <div class="modal" id="branchModal">
   <div class="modal-box">
+    <div class="modal-visual">
+      <img src="image/branch-store.svg" alt="Store branch illustration">
+      <div>
+        <span>Branch profile</span>
+        <strong>Keep your store locations organized</strong>
+      </div>
+    </div>
     <div class="modal-head">
       <h3 id="modalTitle">Add Branch</h3>
       <div class="modal-close" onclick="closeModal()">&times;</div>
@@ -130,10 +124,10 @@ function toggleSidebar(){
   main.classList.toggle("full");
 }
 
-function go(page){ window.location.href = page; }
+function go(page){ (window.navigateToPage || function(p){ window.location.href = p; })(page); }
 function logout(){
   localStorage.removeItem("martUser");
-  window.location.href = "login.html";
+  (window.navigateToPage || function(p){ window.location.href = p; })("login.html", "Logging out...");
 }
 
 const DEFAULT_BRANCHES = [
@@ -185,40 +179,44 @@ function renderTable(){
   }
 
   if(list.length === 0){
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 28px; color: #64748b;">No branches found</td></tr>`;
+    tbody.innerHTML = `<div class="empty-state"><i class="fas fa-store-slash"></i><strong>No branches found</strong><span>Try a different search term.</span></div>`;
     return;
   }
 
-  tbody.innerHTML = list.map((b, idx) => {
+  tbody.innerHTML = list.map((b) => {
     const isCurrent = b.name === current;
     const statusClass = (b.status || "Active").toLowerCase() === "active" ? "active" : "inactive";
+    const originalIndex = getBranches().findIndex(item => item.code === b.code && item.name === b.name);
 
     return `
-      <tr>
-        <td><span class="code-badge">${b.code}</span></td>
-        <td>
-          <strong>${b.name}</strong>
+      <article class="branch-card">
+        <div class="branch-card-image">
+          <img src="image/branch-store.svg" alt="${b.name || "Branch"} store">
+          <span class="code-badge">${b.code || "BR---"}</span>
+          <span class="status ${statusClass}"><i class="fas fa-circle"></i> ${b.status || "Active"}</span>
+        </div>
+        <div class="branch-card-body">
+          <div class="branch-title-row">
+            <h3>${b.name}</h3>
           ${isCurrent ? `<span class="current-tag"><i class="fas fa-check-circle"></i> Current</span>` : ''}
-        </td>
-        <td>${b.address || "—"}</td>
-        <td>${b.phone || "—"}</td>
-        <td><span class="status ${statusClass}"><i class="fas fa-circle" style="font-size: 0.55rem;"></i> ${b.status}</span></td>
-        <td>
+          </div>
+          <p class="branch-detail"><i class="fas fa-location-dot"></i> ${b.address || "No address"}</p>
+          <p class="branch-detail"><i class="fas fa-phone"></i> ${b.phone || "No phone"}</p>
           <div class="action-btn-group">
             ${!isCurrent ? `
               <button class="btn small green" onclick="setCurrentBranch('${b.name.replace(/'/g, "\\'")}')" title="Set as active branch">
                 <i class="fas fa-check"></i> Set Active
               </button>
             ` : ''}
-            <button class="btn small" onclick="openEditModal(${idx})" title="Edit branch">
+            <button class="btn small" onclick="openEditModal(${originalIndex})" title="Edit branch">
               <i class="fas fa-pen"></i> Edit
             </button>
-            <button class="btn small red" onclick="deleteBranch(${idx})" title="Delete branch">
+            <button class="btn small red" onclick="deleteBranch(${originalIndex})" title="Delete branch">
               <i class="fas fa-trash"></i> Delete
             </button>
           </div>
-        </td>
-      </tr>
+        </div>
+      </article>
     `;
   }).join("");
 }

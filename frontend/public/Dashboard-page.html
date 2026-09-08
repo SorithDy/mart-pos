@@ -13,29 +13,13 @@
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="css/pages/Dashboard-page.css">
+  <link rel="stylesheet" href="css/shared-sidebar.css">
 </head>
 
 <body data-page="dashboard">
 
 <!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-  <div class="logo">
-    <i class="fas fa-store"></i>
-    <span>Mart Dashboard</span>
-  </div>
-
-  <ul>
-    <li class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
-    <li onclick="go('POS.html')"><i class="fas fa-cash-register"></i> POS</li>
-    <li onclick="go('LowStock.html')"><i class="fas fa-box"></i> Low Stock</li>
-    <li onclick="go('ReceiptHistory.html')"><i class="fas fa-file-invoice"></i> Receipt History</li>
-    <li onclick="go('Product.html')"><i class="fas fa-boxes"></i> Products</li>
-    <li onclick="go('ProductCategory.html')"><i class="fas fa-tags"></i> Category</li>
-    <li onclick="go('Promotions.html')"><i class="fas fa-tags"></i> Promotions</li>
-    <li onclick="go('Staff.html')"><i class="fas fa-user-cog"></i> Staff</li>
-    <li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
-  </ul>
-</div>
+<div class="sidebar" id="sidebar"></div>
 
 <!-- Navbar -->
 <div class="navbar" id="navbar">
@@ -395,10 +379,10 @@ function toggleSidebar() {
   main.classList.toggle("full");
 }
 
-function go(page){ window.location.href = page; }
+function go(page){ (window.navigateToPage || function(p){ window.location.href = p; })(page); }
 function logout(){ 
   localStorage.removeItem("martUser");
-  window.location.href = "login.html"; 
+  (window.navigateToPage || function(p){ window.location.href = p; })("login.html", "Logging out...");
 }
 
 // User Profile greeting

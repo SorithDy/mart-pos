@@ -12,11 +12,138 @@
     { id: "account", label: "Accounts", href: "Account.html", icon: "fas fa-user-shield" }
   ];
 
+  // 1. Ensure shared stylesheet is linked
+  function ensureStylesheet() {
+    if (!document.getElementById("shared-sidebar-stylesheet")) {
+      const link = document.createElement("link");
+      link.id = "shared-sidebar-stylesheet";
+      link.rel = "stylesheet";
+      link.href = "css/shared-sidebar.css";
+      document.head.appendChild(link);
+    }
+  }
+  ensureStylesheet();
+
+  // 2. Ensure iOS-Style Page Loading Overlay exists
+  function ensureLoadingOverlay() {
+    let overlay = document.getElementById("page-loading-overlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "page-loading-overlay";
+      overlay.setAttribute("aria-hidden", "true");
+      overlay.innerHTML = `
+        <div class="page-loading-card">
+          <div class="ios-spinner" role="status" aria-label="Loading">
+            <div class="ios-blade"></div>
+            <div class="ios-blade"></div>
+            <div class="ios-blade"></div>
+            <div class="ios-blade"></div>
+            <div class="ios-blade"></div>
+            <div class="ios-blade"></div>
+            <div class="ios-blade"></div>
+            <div class="ios-blade"></div>
+            <div class="ios-blade"></div>
+            <div class="ios-blade"></div>
+            <div class="ios-blade"></div>
+            <div class="ios-blade"></div>
+          </div>
+          <div class="page-loading-label" id="page-loading-label">Loading...</div>
+        </div>
+      `;
+      (document.body || document.documentElement).appendChild(overlay);
+    }
+    return overlay;
+  }
+
+  // Show page loader perfectly centered on screen
+  function showPageLoader(text = "Loading...") {
+    const overlay = ensureLoadingOverlay();
+    const label = document.getElementById("page-loading-label");
+    if (label) label.textContent = text;
+    overlay.classList.add("active");
+  }
+
+  // Hide page loader with smooth fade-out
+  function hidePageLoader() {
+    const overlay = document.getElementById("page-loading-overlay");
+    if (overlay) {
+      overlay.classList.remove("active");
+    }
+  }
+
+  // Smooth page navigation: avoids abrupt jerking/flickering
+  function navigateToPage(href, label = "Loading...") {
+    if (!href || href === "#") return;
+
+    // Check if current page is the destination
+    const currentPath = window.location.pathname.split("/").pop() || "index.html";
+    if (currentPath.toLowerCase() === href.toLowerCase()) {
+      // Don't reload current page!
+      if (window.innerWidth <= 768) {
+        window.closeSidebar();
+      }
+      return;
+    }
+
+    showPageLoader(label);
+
+    try {
+      sessionStorage.setItem("mart_page_navigating", "1");
+    } catch (_) {}
+
+    // Give browser brief time to paint the iOS spinner before navigation
+    setTimeout(() => {
+      window.location.href = href;
+    }, 120);
+  }
+
+  // Check if page was opened via navigation transition
+  function handlePageEntry() {
+    let wasNavigating = false;
+    try {
+      wasNavigating = sessionStorage.getItem("mart_page_navigating") === "1";
+      sessionStorage.removeItem("mart_page_navigating");
+    } catch (_) {
+      wasNavigating = false;
+    }
+
+    if (wasNavigating) {
+      // Keep loader visible smoothly while page initializes
+      showPageLoader();
+      setTimeout(() => {
+        hidePageLoader();
+      }, 220);
+    }
+  }
+
+  // Handle menu item clicks
+  window.handleSidebarClick = function (event, href, itemId) {
+    if (event) event.preventDefault();
+    const activePage = (document.body.dataset.page || "").toLowerCase();
+
+    if (itemId && itemId.toLowerCase() === activePage) {
+      // Prevent reload on the active page - prevents flickering!
+      const el = event?.currentTarget;
+      if (el) {
+        el.classList.add("pulse");
+        setTimeout(() => el.classList.remove("pulse"), 400);
+      }
+      if (window.innerWidth <= 768) {
+        window.closeSidebar();
+      }
+      return;
+    }
+
+    const el = event?.currentTarget;
+    if (el) el.classList.add("navigating");
+    navigateToPage(href);
+  };
+
   function renderSidebar() {
     const sidebar = document.getElementById("sidebar");
     if (!sidebar) return;
 
-    const activePage = document.body.dataset.page || "";
+    const activePage = (document.body.dataset.page || "").toLowerCase();
     let currentUser = null;
     try {
       currentUser = JSON.parse(localStorage.getItem("martUser") || "null");
@@ -40,8 +167,9 @@
     });
 
     const menuHtml = visibleItems.map((item) => {
-      const activeClass = item.id === activePage ? " class=\"active\"" : "";
-      return `<li${activeClass} onclick="window.location.href='${item.href}'"><i class="${item.icon}"></i> <span>${item.label}</span></li>`;
+      const isActive = item.id.toLowerCase() === activePage;
+      const activeClass = isActive ? ' class="active"' : "";
+      return `<li${activeClass} data-id="${item.id}" onclick="handleSidebarClick(event, '${item.href}', '${item.id}')"><i class="${item.icon}"></i> <span>${item.label}</span></li>`;
     }).join("");
 
     sidebar.innerHTML = `
@@ -50,13 +178,13 @@
         <span>Mart Dashboard</span>
         <button class="sidebar-close" type="button" onclick="closeSidebar()" aria-label="Close sidebar">&times;</button>
       </div>
-      <div class="sidebar-branch-info" onclick="window.location.href='Branch.html'" title="Current Branch: ${currentBranch}">
+      <div class="sidebar-branch-info" onclick="handleSidebarClick(event, 'Branch.html', 'branch')" title="Current Branch: ${currentBranch}">
         <i class="fas fa-code-branch"></i>
         <span>${currentBranch}</span>
       </div>
       <ul class="sidebar-menu">
         ${menuHtml}
-        <li class="sidebar-logout" onclick="window.location.href='login.html'"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></li>
+        <li class="sidebar-logout" onclick="handleSidebarLogout(event)"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></li>
       </ul>
       <div class="sidebar-footer">
         <div class="footer-title">Mart Dashboard</div>
@@ -65,185 +193,54 @@
     `;
   }
 
-  window.renderSidebar = renderSidebar;
+  window.handleSidebarLogout = function (event) {
+    if (event) event.preventDefault();
+    try {
+      localStorage.removeItem("martUser");
+    } catch (_) {}
+    navigateToPage("login.html", "Logging out...");
+  };
 
   window.closeSidebar = function () {
     const sidebar = document.getElementById("sidebar");
     if (sidebar) sidebar.classList.remove("open");
   };
 
-  if (!document.getElementById("shared-sidebar-styles")) {
-    const style = document.createElement("style");
-    style.id = "shared-sidebar-styles";
-    style.textContent = `
-      .sidebar {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 300px !important;
-        height: 100vh !important;
-        background: #ffffff !important;
-        border-right: 1px solid #e2e8f0 !important;
-        transition: transform 0.3s ease !important;
-        z-index: 1000 !important;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.03) !important;
-        display: flex !important;
-        flex-direction: column !important;
-        box-sizing: border-box !important;
-        overflow: hidden !important;
-        font-family: Arial, sans-serif !important;
-      }
-      .sidebar.closed {
-        transform: translateX(-100%) !important;
-      }
-      .sidebar .logo {
-        height: 70px !important;
-        min-height: 70px !important;
-        background: #1b2632 !important;
-        color: #ffffff !important;
-        padding: 0 24px !important;
-        font-size: 24px !important;
-        font-weight: 700 !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 12px !important;
-        box-sizing: border-box !important;
-        position: relative !important;
-        flex-shrink: 0 !important;
-        font-family: Arial, sans-serif !important;
-      }
-      .sidebar .logo i {
-        font-size: 26px !important;
-        color: #3b82f6 !important;
-      }
-      .sidebar .sidebar-branch-info {
-        background: #22303e !important;
-        color: #94a3b8 !important;
-        padding: 8px 24px !important;
-        font-size: 14px !important;
-        font-family: Arial, sans-serif !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-        border-bottom: 1px solid rgba(255,255,255,0.08) !important;
-        flex-shrink: 0 !important;
-        box-sizing: border-box !important;
-      }
-      .sidebar .sidebar-branch-info:hover {
-        background: #2b3b4c !important;
-        color: #ffffff !important;
-      }
-      .sidebar .sidebar-branch-info i {
-        color: #38bdf8 !important;
-        font-size: 15px !important;
-        width: 18px !important;
-        text-align: center !important;
-      }
-      .sidebar .sidebar-branch-info span {
-        color: #e2e8f0 !important;
-        font-weight: 600 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-      }
-      .sidebar .sidebar-menu {
-        list-style: none !important;
-        padding: 14px 0 90px 0 !important;
-        margin: 0 !important;
-        overflow-y: auto !important;
-        flex: 1 1 auto !important;
-        box-sizing: border-box !important;
-      }
-      .sidebar .sidebar-menu li {
-        padding: 14px 24px !important;
-        border-bottom: 1px dashed #e5e7eb !important;
-        cursor: pointer !important;
-        display: flex !important;
-        gap: 14px !important;
-        align-items: center !important;
-        font-size: 19px !important;
-        font-family: Arial, sans-serif !important;
-        color: #334155 !important;
-        transition: all 0.2s ease !important;
-        box-sizing: border-box !important;
-        min-height: 52px !important;
-        line-height: 1.3 !important;
-      }
-      .sidebar .sidebar-menu li:hover {
-        background: #f1f5f9 !important;
-        color: #2563eb !important;
-      }
-      .sidebar .sidebar-menu li.active {
-        background: #eff6ff !important;
-        color: #2563eb !important;
-        font-weight: 700 !important;
-        border-left: 4px solid #2563eb !important;
-      }
-      .sidebar .sidebar-menu li i {
-        width: 26px !important;
-        min-width: 26px !important;
-        text-align: center !important;
-        font-size: 21px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        flex-shrink: 0 !important;
-      }
-      .sidebar .sidebar-footer {
-        position: absolute !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        padding: 14px 24px !important;
-        border-top: 1px solid #e5e7eb !important;
-        background: #ffffff !important;
-        color: #6b7280 !important;
-        font-size: 13px !important;
-        line-height: 1.5 !important;
-        box-sizing: border-box !important;
-        font-family: Arial, sans-serif !important;
-      }
-      .sidebar .sidebar-footer .footer-title {
-        font-weight: 700 !important;
-        color: #1f2937 !important;
-        font-size: 15px !important;
-      }
-      .sidebar .sidebar-footer .footer-version {
-        color: #6b7280 !important;
-        font-size: 13px !important;
-      }
-      .sidebar-close {
-        display: none;
-        margin-left: auto;
-        width: 34px;
-        height: 34px;
-        border: 0;
-        border-radius: 8px;
-        background: rgba(255,255,255,.14);
-        color: #fff;
-        font-size: 1.6rem;
-        line-height: 1;
-        cursor: pointer;
-      }
-      .sidebar-close:hover { background: rgba(255,255,255,.25); }
-      @media (max-width: 768px) {
-        .sidebar {
-          transform: translateX(-100%) !important;
-        }
-        .sidebar.open {
-          transform: translateX(0) !important;
-        }
-        .sidebar-close { display: grid; place-items: center; }
-      }
-    `;
-    document.head.appendChild(style);
+  window.toggleSidebar = function () {
+    const sidebar = document.getElementById("sidebar");
+    const navbar = document.getElementById("navbar");
+    const main = document.getElementById("main");
+    const overlay = document.getElementById("page-loading-overlay");
+
+    if (window.innerWidth <= 768) {
+      if (sidebar) sidebar.classList.toggle("open");
+      return;
+    }
+
+    if (sidebar) sidebar.classList.toggle("closed");
+    if (navbar) navbar.classList.toggle("full");
+    if (main) main.classList.toggle("full");
+  };
+
+  // Expose global navigation helpers
+  window.renderSidebar = renderSidebar;
+  window.navigateToPage = navigateToPage;
+  window.showPageLoader = showPageLoader;
+  window.hidePageLoader = hidePageLoader;
+  window.go = function (page) {
+    navigateToPage(page);
+  };
+
+  function init() {
+    ensureStylesheet();
+    ensureLoadingOverlay();
+    renderSidebar();
+    handlePageEntry();
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", renderSidebar);
+    document.addEventListener("DOMContentLoaded", init);
   } else {
-    renderSidebar();
+    init();
   }
 })();

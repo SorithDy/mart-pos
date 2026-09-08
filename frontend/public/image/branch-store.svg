@@ -1,0 +1,23 @@
+<svg width="900" height="420" viewBox="0 0 900 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="900" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BFDBFE"/><stop offset="1" stop-color="#DBEAFE"/>
+    </linearGradient>
+    <linearGradient id="wall" x1="450" y1="80" x2="450" y2="390" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#F1F5F9"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="420" fill="url(#sky)"/>
+  <circle cx="760" cy="76" r="44" fill="#FDE68A" opacity=".8"/>
+  <path d="M0 348C170 300 242 322 382 344C548 370 682 310 900 338V420H0V348Z" fill="#93C5FD" opacity=".65"/>
+  <path d="M167 390V176C167 163.85 176.85 154 189 154H711C723.15 154 733 163.85 733 176V390H167Z" fill="url(#wall)"/>
+  <path d="M133 162L167 97H733L767 162H133Z" fill="#2563EB"/>
+  <path d="M133 162H767V203H133V162Z" fill="#1D4ED8"/>
+  <path d="M168 162H238V202H168V162ZM273 162H343V202H273V162ZM378 162H448V202H378V162ZM483 162H553V202H483V162ZM588 162H658V202H588V162ZM693 162H733V202H693V162Z" fill="#60A5FA"/>
+  <rect x="209" y="230" width="160" height="160" rx="6" fill="#BFDBFE"/>
+  <rect x="531" y="230" width="160" height="160" rx="6" fill="#BFDBFE"/>
+  <path d="M428 390V265C428 253.954 436.954 245 448 245C459.046 245 468 253.954 468 265V390H428Z" fill="#1E3A8A"/>
+  <path d="M210 250H368M532 250H690" stroke="#FFFFFF" stroke-width="8" opacity=".8"/>
+  <rect x="310" y="110" width="280" height="58" rx="12" fill="#1E3A8A"/>
+  <text x="450" y="148" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-weight="700" font-size="25">MART STORE</text>
+</svg>

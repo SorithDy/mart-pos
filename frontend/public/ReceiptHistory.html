@@ -8,11 +8,11 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
 <link rel="stylesheet" href="css/pages/ReceiptHistory.css">
+<link rel="stylesheet" href="css/shared-sidebar.css">
 </head>
 <body data-page="receipt-history">
 
-<div class="sidebar" id="sidebar">
-</div>
+<div class="sidebar" id="sidebar"></div>
 
 <div class="navbar" id="navbar">
   <button class="nav-icon-btn" type="button" onclick="toggleSidebar()" aria-label="Toggle sidebar">
@@ -179,11 +179,12 @@ function toggleSidebar() {
   main.classList.toggle("full");
 }
 function go(page) {
-  window.location.href = page;
+  (window.navigateToPage || function(p){ window.location.href = p; })(page);
 }
 
 function logout() {
-  window.location.href = "login.html";
+  localStorage.removeItem("martUser");
+  (window.navigateToPage || function(p){ window.location.href = p; })("login.html", "Logging out...");
 }
 
 
