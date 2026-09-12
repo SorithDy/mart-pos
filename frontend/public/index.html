@@ -2,12 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="0; url=/login.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <script src="runtime-config.js"></script>
-  <title>Redirecting...</title>
+  <title>Mart POS</title>
   <script>
-    window.location.replace("/login.html");
+    (function(){
+      try {
+        var user = localStorage.getItem("martUser");
+        var lastActivity = parseInt(localStorage.getItem("martLastActivity") || "0", 10);
+        var timeoutMs = 2 * 60 * 1000;
+        if (user && JSON.parse(user)) {
+          if (lastActivity && (Date.now() - lastActivity >= timeoutMs)) {
+            localStorage.removeItem("martUser");
+            localStorage.removeItem("martLastActivity");
+            window.location.replace("login.html?reason=inactivity");
+            return;
+          }
+          window.location.replace("Dashboard-page.html");
+        } else {
+          window.location.replace("login.html");
+        }
+      } catch(e) {
+        localStorage.removeItem("martUser");
+        localStorage.removeItem("martLastActivity");
+        window.location.replace("login.html");
+      }
+    })();
   </script>
 </head>
 <body>

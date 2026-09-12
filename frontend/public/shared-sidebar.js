@@ -1,4 +1,34 @@
 (function () {
+  // Global Authentication Guard: Enforce login across all pages using shared-sidebar
+  let currentUserData = null;
+  try {
+    const rawUser = localStorage.getItem("martUser");
+    currentUserData = rawUser ? JSON.parse(rawUser) : null;
+    if (!currentUserData) {
+      localStorage.removeItem("martUser");
+      window.location.replace("login.html");
+      return;
+    }
+  } catch (e) {
+    localStorage.removeItem("martUser");
+    window.location.replace("login.html");
+    return;
+  }
+
+  // Verify cryptographic token to prevent Inspect/Console tampering
+  if (currentUserData.token) {
+    fetch("/api/verify-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: currentUserData.token })
+    }).then(res => res.json()).then(data => {
+      if (data && data.valid === false) {
+        localStorage.removeItem("martUser");
+        window.location.replace("login.html");
+      }
+    }).catch(() => {});
+  }
+
   const items = [
     { id: "dashboard", label: "Dashboard", href: "Dashboard-page.html", icon: "fas fa-tachometer-alt" },
     { id: "pos", label: "POS", href: "POS.html", icon: "fas fa-cash-register" },
@@ -197,6 +227,7 @@
     if (event) event.preventDefault();
     try {
       localStorage.removeItem("martUser");
+      localStorage.removeItem("martLastActivity");
     } catch (_) {}
     navigateToPage("login.html", "Logging out...");
   };

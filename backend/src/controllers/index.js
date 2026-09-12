@@ -180,17 +180,48 @@ function registerControllers(app, deps) {
         );
       }
   
+      const authSecret = process.env.AUTH_SECRET || "mart_pos_secret_2026_secure";
+      const rawPayload = `${user.username || ""}|${user.role || "User"}|${Date.now()}`;
+      const signature = crypto.createHmac("sha256", authSecret).update(rawPayload).digest("hex");
+      const token = `${Buffer.from(rawPayload).toString("base64")}.${signature}`;
+
       res.json({
         message: "Login successful",
+        token: token,
         user: {
           username: user.username || "",
           fullName: user.fullName || "",
           role: user.role || "User",
-          employeeNumber: user.employeeNumber || ""
+          employeeNumber: user.employeeNumber || "",
+          token: token
         }
       });
     } catch (err) {
       res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/api/verify-token", (req, res) => {
+    try {
+      const token = String(req.body.token || "").trim();
+      if (!token || !token.includes(".")) {
+        return res.status(401).json({ valid: false, message: "Missing or invalid token format" });
+      }
+      const [b64Payload, signature] = token.split(".");
+      const authSecret = process.env.AUTH_SECRET || "mart_pos_secret_2026_secure";
+      const rawPayload = Buffer.from(b64Payload, "base64").toString("utf8");
+      const expectedSig = crypto.createHmac("sha256", authSecret).update(rawPayload).digest("hex");
+
+      const sigBuf = Buffer.from(signature, "hex");
+      const expBuf = Buffer.from(expectedSig, "hex");
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+        return res.status(401).json({ valid: false, message: "Forged or tampered token" });
+      }
+
+      const [username, role] = rawPayload.split("|");
+      return res.json({ valid: true, username, role });
+    } catch (err) {
+      return res.status(401).json({ valid: false, error: err.message });
     }
   });
   

@@ -2,6 +2,19 @@
 <html lang="en">
 <head>
   <script src="runtime-config.js"></script>
+  <script>
+    (function(){
+      try {
+        const u = localStorage.getItem("martUser");
+        if(!u || !JSON.parse(u)) {
+          window.location.replace("login.html");
+        }
+      } catch(e) {
+        localStorage.removeItem("martUser");
+        window.location.replace("login.html");
+      }
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mart Dashboard - Analytics & Overview</title>
@@ -385,13 +398,19 @@ function logout(){
   (window.navigateToPage || function(p){ window.location.href = p; })("login.html", "Logging out...");
 }
 
-// User Profile greeting
+// User Profile greeting & Auth Guard
+let CURRENT_USER = null;
 try {
-  const user = JSON.parse(localStorage.getItem("martUser") || "null");
-  if(user && (user.fullName || user.username)) {
-    document.getElementById("adminGreetingName").textContent = (user.fullName || user.username).toUpperCase();
-  }
-} catch {}
+  CURRENT_USER = JSON.parse(localStorage.getItem("martUser") || "null");
+} catch {
+  CURRENT_USER = null;
+}
+if (!CURRENT_USER) {
+  localStorage.removeItem("martUser");
+  window.location.replace("login.html");
+} else if (CURRENT_USER.fullName || CURRENT_USER.username) {
+  document.getElementById("adminGreetingName").textContent = (CURRENT_USER.fullName || CURRENT_USER.username).toUpperCase();
+}
 
 document.getElementById("lastLogin").textContent = new Date().toLocaleString();
 

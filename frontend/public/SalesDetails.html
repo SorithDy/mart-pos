@@ -2,6 +2,19 @@
 <html lang="en">
 <head>
   <script src="runtime-config.js"></script>
+  <script>
+    (function(){
+      try {
+        const u = localStorage.getItem("martUser");
+        if(!u || !JSON.parse(u)) {
+          window.location.replace("login.html");
+        }
+      } catch(e) {
+        localStorage.removeItem("martUser");
+        window.location.replace("login.html");
+      }
+    })();
+  </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sales Details</title>
@@ -99,6 +112,18 @@ function go(page){
 function logout(){
   localStorage.removeItem("martUser");
   (window.navigateToPage || function(p){ window.location.href = p; })("login.html", "Logging out...");
+}
+
+// Authentication Guard
+let CURRENT_USER = null;
+try {
+  CURRENT_USER = JSON.parse(localStorage.getItem("martUser") || "null");
+} catch {
+  CURRENT_USER = null;
+}
+if (!CURRENT_USER) {
+  localStorage.removeItem("martUser");
+  window.location.replace("login.html");
 }
 
 let SALES=[];

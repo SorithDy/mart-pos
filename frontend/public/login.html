@@ -187,6 +187,7 @@ async function login(){
     }
 
     localStorage.setItem("martUser", JSON.stringify(data.user));
+    localStorage.setItem("martLastActivity", String(Date.now()));
     window.location.href = "/Dashboard-page.html";
   }catch(err){
     showError("Server error");
@@ -201,6 +202,24 @@ document.getElementById("pass").addEventListener("keydown", function(e){
 document.getElementById("user").addEventListener("keydown", function(e){
   if(e.key === "Enter") login();
 });
+
+// Check if locked due to inactivity or already logged in
+(function(){
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("reason") === "inactivity") {
+      localStorage.removeItem("martUser");
+      localStorage.removeItem("martLastActivity");
+      showError("Session locked due to 2 minutes of inactivity. Please sign in again.");
+      return;
+    }
+
+    const existing = localStorage.getItem("martUser");
+    if(existing && JSON.parse(existing)){
+      window.location.replace("Dashboard-page.html");
+    }
+  } catch(e) {}
+})();
 </script>
 
 </body>
