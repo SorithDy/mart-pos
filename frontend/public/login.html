@@ -5,14 +5,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login - Mart Dashboard</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<link rel="stylesheet" href="css/pages/login.css">
+<link rel="stylesheet" href="css/pages/login.css?v=6">
 </head>
 <body>
 
 <div class="page">
-  <section class="brand-panel">
+  <section class="brand-panel left">
     <div>
       <div class="side-chip left"><i class="fas fa-shield-halved"></i> Secure Access</div>
       <h1 class="side-title left">Welcome back to store control.</h1>
@@ -23,8 +29,13 @@
       <div class="brand-points">
         <div class="point">
           <i class="fas fa-boxes-stacked"></i>
-          <strong>Inventory Control</strong>
-          <span>Manage product stock, categories, pricing, and low-stock visibility from one place.</span>
+          <strong>Inventory & Stock Control</strong>
+          <span>Manage product stock, categories, pricing, and real-time low-stock visibility.</span>
+        </div>
+        <div class="point">
+          <i class="fas fa-cash-register"></i>
+          <strong>Fast POS Checkout</strong>
+          <span>Process cashier orders smoothly with barcode scanning and instant receipts.</span>
         </div>
       </div>
     </div>
@@ -119,8 +130,13 @@
       <div class="brand-points">
         <div class="point">
           <i class="fas fa-receipt"></i>
-          <strong>Sales Monitoring</strong>
-          <span>Track invoices, receipts, POS activity, and revenue updates throughout the day.</span>
+          <strong>Sales & Revenue Monitoring</strong>
+          <span>Track invoices, receipts, payment breakdowns, and revenue updates.</span>
+        </div>
+        <div class="point">
+          <i class="fas fa-qrcode"></i>
+          <strong>Instant KHQR Payments</strong>
+          <span>Generate secure ABA & Bakong QR codes for swift and accurate checkout.</span>
         </div>
       </div>
     </div>
@@ -210,12 +226,17 @@ document.getElementById("user").addEventListener("keydown", function(e){
     if (urlParams.get("reason") === "inactivity") {
       localStorage.removeItem("martUser");
       localStorage.removeItem("martLastActivity");
-      showError("Session locked due to 2 minutes of inactivity. Please sign in again.");
       return;
     }
 
     const existing = localStorage.getItem("martUser");
     if(existing && JSON.parse(existing)){
+      const lastAct = parseInt(localStorage.getItem("martLastActivity") || "0", 10);
+      if (lastAct && (Date.now() - lastAct >= 2 * 60 * 1000)) {
+        localStorage.removeItem("martUser");
+        localStorage.removeItem("martLastActivity");
+        return;
+      }
       window.location.replace("Dashboard-page.html");
     }
   } catch(e) {}

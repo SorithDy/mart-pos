@@ -5,10 +5,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Receipt History - Mart Dashboard</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
-<link rel="stylesheet" href="css/pages/ReceiptHistory.css">
-<link rel="stylesheet" href="css/shared-sidebar.css">
+<link rel="stylesheet" href="css/pages/ReceiptHistory.css?v=2">
+<link rel="stylesheet" href="css/shared-sidebar.css?v=2">
 </head>
 <body data-page="receipt-history">
 
@@ -41,9 +47,15 @@
       <i class="fas fa-search"></i>
       <input id="search" placeholder="Search invoice / staff..." oninput="renderSales()">
     </div>
-    <button class="btn red hidden" id="clearHistoryBtn" onclick="clearHistory()">
-      <i class="fas fa-trash"></i> Clear History
-    </button>
+    <div class="topbar-actions">
+      <div class="total-pill" id="totalPill">
+        <i class="fas fa-receipt"></i>
+        <span>Total: <strong id="totalCount">0</strong> Receipts</span>
+      </div>
+      <button class="btn red hidden" id="clearHistoryBtn" onclick="clearHistory()">
+        <i class="fas fa-trash"></i> Clear History
+      </button>
+    </div>
   </div>
 
   <table>
@@ -254,6 +266,11 @@ function renderSales() {
     String(s.invoiceNo || "").toLowerCase().includes(q) ||
     String(s.staffName || "").toLowerCase().includes(q)
   );
+
+  const totalCountEl = document.getElementById("totalCount");
+  if(totalCountEl){
+    totalCountEl.textContent = q ? `${filtered.length} / ${SALES.length}` : `${SALES.length}`;
+  }
 
   if (filtered.length === 0) {
     table.innerHTML = "<tr><td colspan='7'>No receipts found</td></tr>";

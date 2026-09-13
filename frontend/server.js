@@ -61,6 +61,58 @@ const server = http.createServer((req, res) => {
   });
 });
 
+const { exec } = require("child_process");
+
+function openInChrome(url) {
+  if (process.env.NO_AUTO_OPEN === "true") return;
+
+  const isWin = process.platform === "win32";
+  const isMac = process.platform === "darwin";
+
+  const cmd = isWin
+    ? `start chrome "${url}"`
+    : isMac
+    ? `open -a "Google Chrome" "${url}"`
+    : `google-chrome "${url}"`;
+
+  exec(cmd, (err) => {
+    if (err) {
+      const fallback = isWin
+        ? `start "" "${url}"`
+        : isMac
+        ? `open "${url}"`
+        : `xdg-open "${url}"`;
+      exec(fallback, () => {});
+    }
+  });
+}
+
+const os = require("os");
+
+function getNetworkIp() {
+  try {
+    const nets = os.networkInterfaces();
+    for (const name of Object.keys(nets)) {
+      if (name.toLowerCase().includes("vmnet") || name.toLowerCase().includes("virtual") || name.toLowerCase().includes("wsl")) continue;
+      for (const net of nets[name]) {
+        if (net.family === "IPv4" && !net.internal) {
+          return net.address;
+        }
+      }
+    }
+  } catch (_) {}
+  return "localhost";
+}
+
 server.listen(port, "0.0.0.0", () => {
-  console.log(`Frontend running at http://localhost:${port}`);
+  const localUrl = `http://localhost:${port}`;
+  const networkIp = getNetworkIp();
+  const networkUrl = `http://${networkIp}:${port}`;
+
+  console.log(`\x1b[32m✔ Frontend Server running:\x1b[0m`);
+  console.log(`  ➜ Local:   \x1b[36m${localUrl}\x1b[0m`);
+  if (networkIp !== "localhost") {
+    console.log(`  ➜ Network: \x1b[36m${networkUrl}\x1b[0m`);
+  }
+  openInChrome(localUrl);
 });

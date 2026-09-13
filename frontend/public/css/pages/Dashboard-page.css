@@ -781,11 +781,11 @@ td {
 }
 
 th {
-  color: var(--text-muted);
-  font-size: 0.75rem;
+  color: var(--text-primary);
+  font-size: 0.84rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
 }
 
 td {

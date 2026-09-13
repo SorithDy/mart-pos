@@ -5,10 +5,16 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Category - Mart Dashboard</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
-<link rel="stylesheet" href="css/pages/ProductCategory.css">
-<link rel="stylesheet" href="css/shared-sidebar.css">
+<link rel="stylesheet" href="css/pages/ProductCategory.css?v=2">
+<link rel="stylesheet" href="css/shared-sidebar.css?v=2">
 </head>
 
 <body data-page="category">
@@ -41,7 +47,13 @@
       <i class="fas fa-search"></i>
       <input id="q" placeholder="Search by ID / Name..." oninput="render()">
     </div>
-    <button class="btn" onclick="openAdd()"><i class="fas fa-plus"></i> Add Category</button>
+    <div class="topbar-actions">
+      <div class="total-pill" id="totalPill">
+        <i class="fas fa-tags"></i>
+        <span>Total: <strong id="totalCount">0</strong> Categories</span>
+      </div>
+      <button class="btn" onclick="openAdd()"><i class="fas fa-plus"></i> Add Category</button>
+    </div>
   </div>
 
   <table>
@@ -165,6 +177,11 @@ function render(){
       String(c.categoryName||"").toLowerCase().includes(q) ||
       String(c.description||"").toLowerCase().includes(q)
     );
+  }
+
+  const totalCountEl = document.getElementById("totalCount");
+  if(totalCountEl){
+    totalCountEl.textContent = q ? `${list.length} / ${ALL.length}` : `${ALL.length}`;
   }
 
   if(list.length===0){

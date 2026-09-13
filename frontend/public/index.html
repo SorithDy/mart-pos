@@ -15,7 +15,7 @@
           if (lastActivity && (Date.now() - lastActivity >= timeoutMs)) {
             localStorage.removeItem("martUser");
             localStorage.removeItem("martLastActivity");
-            window.location.replace("login.html?reason=inactivity");
+            window.location.replace("login.html");
             return;
           }
           window.location.replace("Dashboard-page.html");

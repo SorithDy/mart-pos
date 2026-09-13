@@ -113,7 +113,7 @@ window.__MART_CONFIG__ = window.__MART_CONFIG__ || {
   }, 1000);
 
   // ======================================================
-  // 4. 2-MINUTE INACTIVITY AUTO-LOCK TO LOGIN
+  // 4. 2-MINUTE INACTIVITY AUTO-LOCK TO LOGIN & AUTH GUARD
   // ======================================================
   (function () {
     const INACTIVITY_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes in milliseconds
@@ -131,13 +131,27 @@ window.__MART_CONFIG__ = window.__MART_CONFIG__ || {
         localStorage.removeItem("martUser");
         localStorage.removeItem("martLastActivity");
       } catch (_) {}
-      window.location.replace("login.html?reason=inactivity");
+      window.location.replace("login.html");
     }
 
+    // Guard: ensure user is logged in before accessing dashboard/protected pages
     try {
-      const user = localStorage.getItem("martUser");
-      if (!user) return;
+      const rawUser = localStorage.getItem("martUser");
+      const user = rawUser ? JSON.parse(rawUser) : null;
+      if (!user || !user.username) {
+        try {
+          localStorage.removeItem("martUser");
+          localStorage.removeItem("martLastActivity");
+        } catch (_) {}
+        window.location.replace("login.html");
+        return;
+      }
     } catch (_) {
+      try {
+        localStorage.removeItem("martUser");
+        localStorage.removeItem("martLastActivity");
+      } catch (_) {}
+      window.location.replace("login.html");
       return;
     }
 
@@ -145,7 +159,7 @@ window.__MART_CONFIG__ = window.__MART_CONFIG__ || {
     const lastActivityStr = localStorage.getItem("martLastActivity");
     const lastActivity = lastActivityStr ? parseInt(lastActivityStr, 10) : 0;
 
-    // If user opened or refreshed page after 5 minutes of idle time
+    // If user opened or refreshed page after 2 minutes of idle time
     if (lastActivity && (now - lastActivity >= INACTIVITY_TIMEOUT_MS)) {
       lockSession();
       return;
@@ -160,9 +174,9 @@ window.__MART_CONFIG__ = window.__MART_CONFIG__ || {
     function recordActivity() {
       const currentTime = Date.now();
       lastRecordedActivity = currentTime;
-      // Throttle updating localStorage to once every 3 seconds
+      // Throttle updating localStorage to once every 1 second
       const stored = parseInt(localStorage.getItem("martLastActivity") || "0", 10);
-      if (currentTime - stored >= 3000) {
+      if (currentTime - stored >= 1000) {
         try {
           localStorage.setItem("martLastActivity", String(currentTime));
         } catch (_) {}
@@ -170,21 +184,37 @@ window.__MART_CONFIG__ = window.__MART_CONFIG__ || {
     }
 
     // Track user activity across interactions
-    ["mousemove", "mousedown", "keydown", "touchstart", "scroll", "wheel"].forEach((eventName) => {
-      window.addEventListener(eventName, registerActivity, { passive: true, capture: true });
+    const activityEvents = ["mousemove", "mousedown", "keydown", "touchstart", "scroll", "wheel", "click"];
+    activityEvents.forEach((eventName) => {
+      window.addEventListener(eventName, recordActivity, { passive: true, capture: true });
     });
 
-    // Check every 3 seconds if 5 minutes have elapsed without interaction
-    setInterval(() => {
+    function checkInactivity() {
       try {
         const currentUser = localStorage.getItem("martUser");
-        if (!currentUser) return;
+        if (!currentUser) {
+          window.location.replace("login.html");
+          return;
+        }
 
         const stored = parseInt(localStorage.getItem("martLastActivity") || "0", 10) || lastRecordedActivity;
         if (Date.now() - stored >= INACTIVITY_TIMEOUT_MS) {
           lockSession();
         }
       } catch (_) {}
-    }, 3000);
+    }
+
+    // Check every 1 second if 2 minutes have elapsed without interaction
+    setInterval(checkInactivity, 1000);
+
+    // Also check immediately when tab becomes visible or gains focus
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        checkInactivity();
+      }
+    });
+    window.addEventListener("focus", () => {
+      checkInactivity();
+    });
   })();
 })();

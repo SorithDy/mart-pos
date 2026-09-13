@@ -1,2 +1,2 @@
-// Keep the root command stable while application code lives in backend.
-require("./backend/src/bootstrap");
+// Root startup entry point - launches both backend and frontend, and auto-opens Chrome.
+require("./run");

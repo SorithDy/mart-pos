@@ -7,10 +7,13 @@
       try {
         const u = localStorage.getItem("martUser");
         if(!u || !JSON.parse(u)) {
+          localStorage.removeItem("martUser");
+          localStorage.removeItem("martLastActivity");
           window.location.replace("login.html");
         }
       } catch(e) {
         localStorage.removeItem("martUser");
+        localStorage.removeItem("martLastActivity");
         window.location.replace("login.html");
       }
     })();
@@ -395,6 +398,7 @@ function toggleSidebar() {
 function go(page){ (window.navigateToPage || function(p){ window.location.href = p; })(page); }
 function logout(){ 
   localStorage.removeItem("martUser");
+  localStorage.removeItem("martLastActivity");
   (window.navigateToPage || function(p){ window.location.href = p; })("login.html", "Logging out...");
 }
 
@@ -407,6 +411,7 @@ try {
 }
 if (!CURRENT_USER) {
   localStorage.removeItem("martUser");
+  localStorage.removeItem("martLastActivity");
   window.location.replace("login.html");
 } else if (CURRENT_USER.fullName || CURRENT_USER.username) {
   document.getElementById("adminGreetingName").textContent = (CURRENT_USER.fullName || CURRENT_USER.username).toUpperCase();

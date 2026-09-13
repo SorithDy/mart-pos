@@ -5,10 +5,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Staff - Mart Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
-  <link rel="stylesheet" href="css/pages/Staff.css">
-  <link rel="stylesheet" href="css/shared-sidebar.css">
+  <link rel="stylesheet" href="css/pages/Staff.css?v=2">
+  <link rel="stylesheet" href="css/shared-sidebar.css?v=2">
 </head>
 <body data-page="staff">
 
@@ -40,6 +46,10 @@
       <input id="q" placeholder="Search by ID / Name / Phone / Office / Job..." oninput="render()">
     </div>
     <div class="topbar-actions">
+      <div class="total-pill" id="totalPill">
+        <i class="fas fa-users"></i>
+        <span>Total: <strong id="totalCount">0</strong> Staff</span>
+      </div>
       <button class="btn" id="addEmployeeBtn" onclick="openAdd()"><i class="fas fa-plus"></i> Add Employee</button>
       <button class="btn gray" onclick="load()">Reload</button>
     </div>
@@ -252,6 +262,11 @@ function render(){
       String(e.jobTitle ?? "").toLowerCase().includes(q) ||
       String(e.reportsTo ?? "").toLowerCase().includes(q)
     );
+  }
+
+  const totalCountEl = document.getElementById("totalCount");
+  if(totalCountEl){
+    totalCountEl.textContent = q ? `${list.length} / ${ALL.length}` : `${ALL.length}`;
   }
 
   if(list.length === 0){

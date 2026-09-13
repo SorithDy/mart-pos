@@ -101,8 +101,8 @@
   gap: 14px !important;
   align-items: center !important;
   font-size: 16px !important;
-  font-weight: 500 !important;
-  color: #475569 !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
   transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease !important;
   box-sizing: border-box !important;
   min-height: 48px !important;
@@ -170,24 +170,104 @@
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  padding: 12px 24px !important;
-  border-top: 1px solid #e2e8f0 !important;
+  padding: 10px 14px !important;
+  border-top: 1px solid #f1f5f9 !important;
   background: #ffffff !important;
-  color: #64748b !important;
-  font-size: 12px !important;
-  line-height: 1.4 !important;
   box-sizing: border-box !important;
+  z-index: 10 !important;
 }
 
-.sidebar .sidebar-footer .footer-title {
-  font-weight: 700 !important;
-  color: #1e293b !important;
+.sidebar .sidebar-footer-card {
+  padding: 8px 10px !important;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  border: 1px solid #e2e8f0 !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+
+.sidebar .sidebar-footer-card:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%) !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08) !important;
+}
+
+.sidebar .footer-brand-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.sidebar .footer-logo-badge {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 9px !important;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   font-size: 13px !important;
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25) !important;
+  flex-shrink: 0 !important;
 }
 
-.sidebar .sidebar-footer .footer-version {
-  color: #94a3b8 !important;
-  font-size: 12px !important;
+.sidebar .footer-text-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.sidebar .footer-title {
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important;
+  letter-spacing: -0.01em !important;
+}
+
+.sidebar .footer-version-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  line-height: 1 !important;
+}
+
+.sidebar .status-indicator {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  display: inline-block !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+  animation: footerStatusPulse 2s ease-in-out infinite !important;
+}
+
+@keyframes footerStatusPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+}
+
+.sidebar .footer-version {
+  color: #64748b !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+.sidebar .footer-pro-badge {
+  padding: 2px 7px !important;
+  border-radius: 6px !important;
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  color: #2563eb !important;
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  flex-shrink: 0 !important;
 }
 
 .sidebar-close {
@@ -450,28 +530,111 @@ table tbody tr:hover {
   background-color: rgba(241, 245, 249, 0.7) !important;
 }
 
-/* Smooth Modal & Popup Transitions */
+/* Smooth Modal & Popup Transitions with Navbar Kept Clear & Crisp */
 .modal,
-.pay-modal,
+.pay-modal-overlay,
 .dialog,
 .popup-overlay {
+  position: fixed !important;
+  top: 70px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 1000 !important;
+  background: rgba(15, 23, 42, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px 20px 30px 20px !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
   transition: opacity 0.2s ease, visibility 0.2s ease !important;
 }
 
+.modal.show,
+.modal.open,
+.pay-modal-overlay.show,
+.pay-modal-overlay.open,
+.dialog.show,
+.popup-overlay.show {
+  display: flex !important;
+}
+
+.modal-box,
 .modal-content,
+.modal-wrap,
+.pay-modal,
 .pay-box,
 .dialog-box,
 .popup-box {
+  margin: auto !important;
+  position: relative !important;
+  border-radius: 18px !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;
+  border: 1px solid #e2e8f0 !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
   animation: modalScaleIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.modal-box::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar,
+.modal-wrap::-webkit-scrollbar,
+.pay-modal::-webkit-scrollbar,
+.pay-box::-webkit-scrollbar,
+.dialog-box::-webkit-scrollbar,
+.popup-box::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 @keyframes modalScaleIn {
   0% {
     opacity: 0;
-    transform: scale(0.93) translateY(8px);
+    transform: scale(0.95) translateY(12px);
   }
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
 }
+
+/* ==========================================================================
+   Universal Page Counter Pill Badge & Topbar Actions
+   ========================================================================== */
+.topbar-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-shrink: 0 !important;
+}
+
+.total-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 9px 16px !important;
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 10px !important;
+  color: #1e40af !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.06) !important;
+}
+
+.total-pill i {
+  color: #2563eb !important;
+  font-size: 0.95rem !important;
+}
+
+.total-pill strong {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 0.98rem !important;
+}
+

@@ -193,6 +193,241 @@ body {
   50% { transform: scale(1.3); opacity: 0.7; }
 }
 
+/* Center Breaking News Ticker (ព័ត៌មានទាន់ហេតុការណ៍) */
+.pos-breaking-ticker {
+  flex: 1;
+  min-width: 320px;
+  max-width: 720px;
+  margin: 0 14px;
+  height: 40px;
+  background: #fffafa;
+  border: 1px solid #fed7d7;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  padding: 3px 14px 3px 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.06);
+  position: relative;
+  font-family: 'Kantumruy Pro', 'Plus Jakarta Sans', sans-serif;
+}
+
+.breaking-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  color: #ffffff;
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+  z-index: 2;
+  letter-spacing: -0.2px;
+  font-family: 'Kantumruy Pro', sans-serif;
+}
+
+.breaking-badge i {
+  color: #fef08a;
+  font-size: 0.85rem;
+  animation: boltPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes boltPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.22); opacity: 0.85; filter: drop-shadow(0 0 4px #fef08a); }
+}
+
+.ticker-scroll-window {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  margin-left: 12px;
+  position: relative;
+  mask-image: linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%);
+}
+
+.ticker-content {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  gap: 40px;
+  animation: tickerAutoScroll 38s linear infinite;
+  will-change: transform;
+}
+
+.pos-breaking-ticker:hover .ticker-content {
+  animation-play-state: paused;
+}
+
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  user-select: none;
+  letter-spacing: -0.1px;
+}
+
+.ticker-item i {
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.ticker-item strong {
+  color: #991b1b;
+  font-weight: 700;
+}
+
+@keyframes tickerAutoScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Center Branch Indicator & Dropdown */
+.pos-branch-center {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.branch-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(22, 101, 52, 0.06);
+}
+
+.branch-pill-btn:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(22, 101, 52, 0.12);
+}
+
+.branch-pill-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.76rem;
+  flex-shrink: 0;
+}
+
+.branch-pill-content {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.branch-pill-title {
+  color: #15803d;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.branch-pill-name {
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.branch-pill-arrow {
+  font-size: 0.7rem;
+  color: #16a34a;
+  transition: transform 0.2s ease;
+}
+
+.branch-pill-btn.active .branch-pill-arrow {
+  transform: rotate(180deg);
+}
+
+.branch-pill-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  min-width: 240px;
+  padding: 8px;
+  display: none;
+  z-index: 1050;
+  animation: modalPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.branch-pill-dropdown.show {
+  display: block;
+}
+
+.branch-dropdown-header {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 800;
+  padding: 6px 10px 4px;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.branch-option-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 0.84rem;
+  color: #1e293b;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.branch-option-item:hover {
+  background: #f1f5f9;
+}
+
+.branch-option-item.selected {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.branch-option-item.selected i {
+  color: #2563eb;
+}
+
 .pos-meta-right {
   display: flex;
   align-items: center;
@@ -1085,14 +1320,15 @@ body {
 .pay-modal {
   width: 380px;
   max-width: 95vw;
-  background: #ffffff;
+  background: #ffffff !important;
   border-radius: var(--radius-lg);
   padding: 24px 20px 18px;
   text-align: center;
   box-shadow: var(--shadow-modal);
   border: 1px solid var(--border);
   animation: modalPop 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
+  position: relative !important;
+  margin: auto !important;
 }
 
 .pay-icon {

@@ -6,11 +6,22 @@
     currentUserData = rawUser ? JSON.parse(rawUser) : null;
     if (!currentUserData) {
       localStorage.removeItem("martUser");
+      localStorage.removeItem("martLastActivity");
       window.location.replace("login.html");
       return;
     }
   } catch (e) {
     localStorage.removeItem("martUser");
+    localStorage.removeItem("martLastActivity");
+    window.location.replace("login.html");
+    return;
+  }
+
+  // Check 2-minute inactivity
+  const lastActivity = parseInt(localStorage.getItem("martLastActivity") || "0", 10);
+  if (lastActivity && (Date.now() - lastActivity >= 2 * 60 * 1000)) {
+    localStorage.removeItem("martUser");
+    localStorage.removeItem("martLastActivity");
     window.location.replace("login.html");
     return;
   }
@@ -24,6 +35,7 @@
     }).then(res => res.json()).then(data => {
       if (data && data.valid === false) {
         localStorage.removeItem("martUser");
+        localStorage.removeItem("martLastActivity");
         window.location.replace("login.html");
       }
     }).catch(() => {});
@@ -217,8 +229,21 @@
         <li class="sidebar-logout" onclick="handleSidebarLogout(event)"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></li>
       </ul>
       <div class="sidebar-footer">
-        <div class="footer-title">Mart Dashboard</div>
-        <div class="footer-version">Version 1.0</div>
+        <div class="sidebar-footer-card">
+          <div class="footer-brand-row">
+            <div class="footer-logo-badge">
+              <i class="fas fa-store"></i>
+            </div>
+            <div class="footer-text-group">
+              <div class="footer-title">Mart POS</div>
+              <div class="footer-version-row">
+                <span class="status-indicator"></span>
+                <span class="footer-version">v1.0.0 • Online</span>
+              </div>
+            </div>
+            <span class="footer-pro-badge">PRO</span>
+          </div>
+        </div>
       </div>
     `;
   }

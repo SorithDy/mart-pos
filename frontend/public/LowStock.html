@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <link rel="stylesheet" href="css/pages/LowStock.css">
-  <link rel="stylesheet" href="css/shared-sidebar.css">
+  <link rel="stylesheet" href="css/pages/LowStock.css?v=2">
+  <link rel="stylesheet" href="css/shared-sidebar.css?v=2">
 </head>
 
 <body data-page="low-stock">
@@ -47,7 +47,11 @@
       <i class="fas fa-search"></i>
       <input type="text" id="searchInput" placeholder="Search product code / name / category..." oninput="handleSearch()">
     </div>
-    <div>
+    <div class="topbar-actions">
+      <div class="total-pill" id="totalPill">
+        <i class="fas fa-boxes-stacked"></i>
+        <span>Total: <strong id="totalCount">0</strong> Low Stock</span>
+      </div>
       <button class="btn" onclick="go('Product.html')">
         <i class="fas fa-boxes"></i> Manage Products
       </button>
@@ -207,6 +211,11 @@ function renderTable(){
       const desc = String(p.description || "").toLowerCase();
       return code.includes(SEARCH_QUERY) || name.includes(SEARCH_QUERY) || cat.includes(SEARCH_QUERY) || desc.includes(SEARCH_QUERY);
     });
+  }
+
+  const totalCountEl = document.getElementById("totalCount");
+  if(totalCountEl){
+    totalCountEl.textContent = SEARCH_QUERY ? `${list.length} / ${ALL_PRODUCTS.length}` : `${ALL_PRODUCTS.length}`;
   }
 
   if(list.length === 0){

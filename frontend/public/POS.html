@@ -9,13 +9,13 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  <link rel="stylesheet" href="css/pages/POS.css">
-  <link rel="stylesheet" href="css/shared-sidebar.css">
+  <link rel="stylesheet" href="css/pages/POS.css?v=7">
+  <link rel="stylesheet" href="css/shared-sidebar.css?v=7">
 </head>
 <body data-page="pos">
 
@@ -50,6 +50,24 @@
         <span class="live-badge">
           <span class="live-dot"></span> Active Register #01
         </span>
+      </div>
+
+      <!-- Center: Breaking News Auto-Running Ticker -->
+      <div class="pos-breaking-ticker" id="posBreakingTicker">
+        <div class="breaking-badge">
+          <i class="fas fa-bolt"></i>
+          <span>ព័ត៌មានទាន់ហេតុការណ៍</span>
+        </div>
+        <div class="ticker-scroll-window">
+          <div class="ticker-content" id="tickerContent">
+            <span class="ticker-item"><i class="fas fa-angle-right"></i> សួស្តី! សូមស្វាគមន៍មកកាន់ Mart POS Terminal គ្រប់គ្រងការលក់ និងទំនិញប្រកបដោយប្រសិទ្ធភាព</span>
+            <span class="ticker-item"><i class="fas fa-angle-right"></i> ការបញ្ចុះតម្លៃពិសេសលើទំនិញជាច្រើនមុខក្នុងថ្ងៃនេះ (Special Discounts Available Today)</span>
+            <span class="ticker-item"><i class="fas fa-angle-right"></i> អត្រាប្តូរប្រាក់ថ្ងៃនេះ៖ 1 USD = 4,100 KHR</span>
+            <span class="ticker-item"><i class="fas fa-angle-right"></i> សាខាប្រតិបត្តិការ៖ <strong id="tickerBranchName">Main Branch</strong></span>
+            <span class="ticker-item"><i class="fas fa-angle-right"></i> សូមពិនិត្យទំនិញជិតអស់ពីស្តុកក្នុង Low Stock Management</span>
+            <span class="ticker-item"><i class="fas fa-angle-right"></i> ទំនាក់ទំនងផ្នែកបម្រើអតិថិជន & ជំនួយបច្ចេកទេស៖ 023 888 999 / 012 345 678</span>
+          </div>
+        </div>
       </div>
 
       <div class="pos-meta-right">
@@ -270,6 +288,112 @@
     }
     setInterval(updateClock, 1000);
     updateClock();
+
+    // Breaking News Ticker Initialization
+    function initBreakingTicker(){
+      const track = document.getElementById("tickerContent");
+      if(!track) return;
+      const branchName = localStorage.getItem("martCurrentBranch") || "Main Branch";
+      const branchEl = document.getElementById("tickerBranchName");
+      if(branchEl) branchEl.textContent = branchName;
+
+      if(!track.dataset.duplicated){
+        track.innerHTML = track.innerHTML + track.innerHTML;
+        track.dataset.duplicated = "true";
+      }
+    }
+    initBreakingTicker();
+
+    // Center Branch Indicator & Switching Logic
+    const POS_DEFAULT_BRANCHES = [
+      { code: "BR001", name: "Main Branch", address: "Preah Monivong Blvd, Phnom Penh", phone: "023 888 999", status: "Active" },
+      { code: "BR002", name: "Toul Kork Branch", address: "St. 289, Toul Kork, Phnom Penh", phone: "023 777 666", status: "Active" },
+      { code: "BR003", name: "BKK1 Branch", address: "St. 51, BKK1, Phnom Penh", phone: "023 555 444", status: "Active" }
+    ];
+
+    function getPosBranches(){
+      try {
+        const raw = localStorage.getItem("martBranches");
+        return raw ? JSON.parse(raw) : POS_DEFAULT_BRANCHES;
+      } catch {
+        return POS_DEFAULT_BRANCHES;
+      }
+    }
+
+    function getPosCurrentBranch(){
+      return localStorage.getItem("martCurrentBranch") || "Main Branch";
+    }
+
+    function initBranchWidget(){
+      const branchName = getPosCurrentBranch();
+      const nameEl = document.getElementById("posCurrentBranchName");
+      if(nameEl) nameEl.textContent = branchName;
+    }
+
+    function toggleBranchMenu(e){
+      if(e) e.stopPropagation();
+      const menu = document.getElementById("branchPillDropdown");
+      const btn = document.querySelector(".branch-pill-btn");
+      if(!menu) return;
+
+      const isOpen = menu.classList.contains("show");
+      if(isOpen){
+        menu.classList.remove("show");
+        if(btn) btn.classList.remove("active");
+      } else {
+        renderBranchDropdownOptions();
+        menu.classList.add("show");
+        if(btn) btn.classList.add("active");
+      }
+    }
+
+    function renderBranchDropdownOptions(){
+      const menu = document.getElementById("branchPillDropdown");
+      if(!menu) return;
+      const branches = getPosBranches();
+      const current = getPosCurrentBranch();
+
+      menu.innerHTML = `
+        <div class="branch-dropdown-header">
+          <span>Operating Branch</span>
+          <span style="font-size:0.68rem; color:#3b82f6; cursor:pointer;" onclick="go('Branch.html')">Manage &rarr;</span>
+        </div>
+        ${branches.map(b => {
+          const isSel = b.name === current;
+          return `
+            <div class="branch-option-item ${isSel ? 'selected' : ''}" onclick="selectPosBranch('${b.name.replace(/'/g, "\\'")}', event)">
+              <span style="display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-store" style="font-size:0.8rem; color:${isSel ? '#2563eb' : '#64748b'};"></i>
+                <span>${b.name}</span>
+              </span>
+              ${isSel ? '<i class="fas fa-check" style="font-size:0.75rem;"></i>' : ''}
+            </div>
+          `;
+        }).join("")}
+      `;
+    }
+
+    function selectPosBranch(name, e){
+      if(e) e.stopPropagation();
+      localStorage.setItem("martCurrentBranch", name);
+      initBranchWidget();
+      const menu = document.getElementById("branchPillDropdown");
+      if(menu) menu.classList.remove("show");
+      const btn = document.querySelector(".branch-pill-btn");
+      if(btn) btn.classList.remove("active");
+      if(window.renderSidebar) window.renderSidebar();
+    }
+
+    document.addEventListener("click", (e) => {
+      if(!e.target.closest("#posBranchCenter")){
+        const menu = document.getElementById("branchPillDropdown");
+        if(menu) menu.classList.remove("show");
+        const btn = document.querySelector(".branch-pill-btn");
+        if(btn) btn.classList.remove("active");
+      }
+    });
+
+    initBranchWidget();
 
     function money(v){
       return Number(v || 0).toFixed(2);

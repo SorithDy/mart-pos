@@ -93,15 +93,27 @@ h2 {
 }
 
 .search {
+  flex: 1;
+  min-width: 380px;
+  max-width: 580px;
   background: #fff;
-  border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  padding: 10px 14px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   gap: 10px;
-  max-width: 450px;
   margin: 15px 0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.search i {
+  color: #64748b;
+  font-size: 0.95rem;
 }
 .toolbar {
   display: flex;
@@ -115,7 +127,9 @@ h2 {
   border: none;
   outline: none;
   width: 100%;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #0f172a;
 }
 
 .table-card {
@@ -134,14 +148,14 @@ table {
   border-spacing: 0;
 }
 th {
-  background: #f8fafc;
-  color: #475569;
-  font-size: 0.8rem;
-  font-weight: 700;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 14px 16px;
-  border-bottom: 1px solid #e2e8f0;
+  letter-spacing: 0.04em;
+  padding: 16px 18px;
+  border-bottom: 2px solid #cbd5e1;
   border-top: none;
   border-left: none;
   border-right: none;
