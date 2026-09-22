@@ -17,31 +17,10 @@
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
-      
-      --accent-blue: #38bdf8;
-      --accent-cyan: #06b6d4;
-      --accent-emerald: #10b981;
-      --accent-indigo: #6366f1;
 
       --method-get-bg: rgba(16, 185, 129, 0.15);
       --method-get-text: #34d399;
       --method-get-border: rgba(52, 211, 153, 0.35);
-
-      --method-post-bg: rgba(56, 189, 248, 0.15);
-      --method-post-text: #38bdf8;
-      --method-post-border: rgba(56, 189, 248, 0.35);
-
-      --method-put-bg: rgba(245, 158, 11, 0.15);
-      --method-put-text: #fbbf24;
-      --method-put-border: rgba(251, 191, 36, 0.35);
-
-      --method-patch-bg: rgba(139, 92, 246, 0.15);
-      --method-patch-text: #a78bfa;
-      --method-patch-border: rgba(167, 139, 250, 0.35);
-
-      --method-delete-bg: rgba(244, 63, 94, 0.15);
-      --method-delete-text: #fb7185;
-      --method-delete-border: rgba(251, 113, 133, 0.35);
 
       --radius-sm: 6px;
       --radius-md: 10px;
@@ -232,17 +211,19 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.6rem 0.85rem;
+      padding: 0.65rem 0.95rem;
       background: var(--row-bg);
       border: 1px solid rgba(255, 255, 255, 0.04);
       border-radius: var(--radius-sm);
-      transition: background 0.15s, border-color 0.15s;
+      transition: all 0.15s ease;
       text-decoration: none;
       gap: 1rem;
+      cursor: pointer;
     }
     .endpoint-row:hover {
       background: var(--row-hover);
-      border-color: rgba(255, 255, 255, 0.1);
+      border-color: rgba(56, 189, 248, 0.25);
+      transform: translateX(2px);
     }
 
     .endpoint-left {
@@ -256,47 +237,24 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.7rem;
       font-weight: 700;
-      padding: 0.2rem 0.5rem;
+      padding: 0.22rem 0.55rem;
       border-radius: 4px;
       letter-spacing: 0.02em;
-      min-width: 54px;
+      min-width: 52px;
       text-align: center;
-      border: 1px solid transparent;
-    }
-    .badge-GET {
+      border: 1px solid var(--method-get-border);
       background: var(--method-get-bg);
       color: var(--method-get-text);
-      border-color: var(--method-get-border);
-    }
-    .badge-POST {
-      background: var(--method-post-bg);
-      color: var(--method-post-text);
-      border-color: var(--method-post-border);
-    }
-    .badge-PUT {
-      background: var(--method-put-bg);
-      color: var(--method-put-text);
-      border-color: var(--method-put-border);
-    }
-    .badge-PATCH {
-      background: var(--method-patch-bg);
-      color: var(--method-patch-text);
-      border-color: var(--method-patch-border);
-    }
-    .badge-DELETE {
-      background: var(--method-delete-bg);
-      color: var(--method-delete-text);
-      border-color: var(--method-delete-border);
     }
 
     .endpoint-path {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.82rem;
+      font-size: 0.84rem;
       font-weight: 600;
       color: #f1f5f9;
       white-space: nowrap;
     }
-    .endpoint-path:hover {
+    .endpoint-row:hover .endpoint-path {
       color: #38bdf8;
     }
 
@@ -307,18 +265,21 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .endpoint-row:hover .endpoint-desc {
+      color: var(--text-primary);
     }
 
-    .view-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      color: var(--text-primary);
-      text-decoration: none;
+    .external-icon {
+      opacity: 0.5;
+      font-size: 0.75rem;
     }
-    .view-link:hover .endpoint-path {
+    .endpoint-row:hover .external-icon {
+      opacity: 1;
       color: #38bdf8;
-      text-decoration: underline;
     }
 
     /* Footer */
@@ -327,13 +288,6 @@
       text-align: center;
       font-size: 0.75rem;
       color: var(--text-muted);
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 2rem;
-      color: var(--text-muted);
-      font-size: 0.85rem;
     }
   </style>
 </head>
@@ -369,428 +323,164 @@
     <!-- Search Input -->
     <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" class="search-input" placeholder="Search all API endpoints (e.g. products, categories, checkout, sales, khqr)...">
+      <input type="text" id="searchInput" class="search-input" placeholder="Search all API endpoints (e.g. products, categories, sales, employees)...">
     </div>
 
-    <!-- Endpoints Directory Container -->
+    <!-- Endpoints Directory Container (GET Only) -->
     <div id="directoryContainer">
-      <!-- 1. INVENTORY, PRODUCTS & CATEGORIES -->
+
+      <!-- 1. INVENTORY & PRODUCTS -->
       <div class="category-group" data-category="inventory">
         <div class="category-title">
           <span>📁</span> PUBLIC CONTENT & INVENTORY CATALOGS
         </div>
         <div class="endpoints-list">
-          <div class="endpoint-row" data-search="/api/products inventory products">
+          <a href="/api/products" target="_blank" class="endpoint-row" data-search="/api/products inventory products items">
             <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/api/products" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/api/products</span>
-              </a>
-            </div>
-            <span class="endpoint-desc">List All Inventory Products & Categories</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/low-stock inventory low stock">
-            <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/api/low-stock" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/api/low-stock</span>
-              </a>
-            </div>
-            <span class="endpoint-desc">Inventory Items with Low Stock Alerts</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/products post create">
-            <div class="endpoint-left">
-              <span class="method-badge badge-POST">POST</span>
+              <span class="method-badge">GET</span>
               <span class="endpoint-path">/api/products</span>
             </div>
-            <span class="endpoint-desc">Create New Inventory Product Item</span>
-          </div>
+            <span class="endpoint-desc">List All Inventory Products & Categories <span class="external-icon">↗</span></span>
+          </a>
 
-          <div class="endpoint-row" data-search="/api/products put update">
+          <a href="/api/low-stock" target="_blank" class="endpoint-row" data-search="/api/low-stock inventory low stock">
             <div class="endpoint-left">
-              <span class="method-badge badge-PUT">PUT</span>
-              <span class="endpoint-path">/api/products/:code</span>
+              <span class="method-badge">GET</span>
+              <span class="endpoint-path">/api/low-stock</span>
             </div>
-            <span class="endpoint-desc">Update Existing Product Details by Code</span>
-          </div>
+            <span class="endpoint-desc">Inventory Items with Low Stock Alerts <span class="external-icon">↗</span></span>
+          </a>
 
-          <div class="endpoint-row" data-search="/api/products delete remove">
+          <a href="/api/categories" target="_blank" class="endpoint-row" data-search="/api/categories categories groups">
             <div class="endpoint-left">
-              <span class="method-badge badge-DELETE">DELETE</span>
-              <span class="endpoint-path">/api/products/:code</span>
-            </div>
-            <span class="endpoint-desc">Delete Product Item from Inventory</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/categories get categories">
-            <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/api/categories" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/api/categories</span>
-              </a>
-            </div>
-            <span class="endpoint-desc">List All Product Categories</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/categories post create">
-            <div class="endpoint-left">
-              <span class="method-badge badge-POST">POST</span>
+              <span class="method-badge">GET</span>
               <span class="endpoint-path">/api/categories</span>
             </div>
-            <span class="endpoint-desc">Create New Product Category</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/categories put update">
-            <div class="endpoint-left">
-              <span class="method-badge badge-PUT">PUT</span>
-              <span class="endpoint-path">/api/categories/:id</span>
-            </div>
-            <span class="endpoint-desc">Update Category by Category ID</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/categories delete remove">
-            <div class="endpoint-left">
-              <span class="method-badge badge-DELETE">DELETE</span>
-              <span class="endpoint-path">/api/categories/:id</span>
-            </div>
-            <span class="endpoint-desc">Delete Product Category</span>
-          </div>
+            <span class="endpoint-desc">List All Product Categories <span class="external-icon">↗</span></span>
+          </a>
         </div>
       </div>
 
-      <!-- 2. POS CHECKOUT & SALES -->
-      <div class="category-group" data-category="pos">
+      <!-- 2. SALES & TRANSACTIONS -->
+      <div class="category-group" data-category="sales">
         <div class="category-title">
-          <span>🛒</span> POS CHECKOUT, SALES & RECEIPT TRANSACTIONS
+          <span>🛒</span> SALES TRANSACTIONS & RECEIPT HISTORY
         </div>
         <div class="endpoints-list">
-          <div class="endpoint-row" data-search="/api/checkout post sale">
+          <a href="/api/sales" target="_blank" class="endpoint-row" data-search="/api/sales sales history orders">
             <div class="endpoint-left">
-              <span class="method-badge badge-POST">POST</span>
-              <span class="endpoint-path">/api/checkout</span>
+              <span class="method-badge">GET</span>
+              <span class="endpoint-path">/api/sales</span>
             </div>
-            <span class="endpoint-desc">Process POS Sale Checkout & Stock Deduction</span>
-          </div>
+            <span class="endpoint-desc">Sales Transaction Records & Invoice History <span class="external-icon">↗</span></span>
+          </a>
 
-          <div class="endpoint-row" data-search="/api/sales get sales">
+          <a href="/api/recent-sales" target="_blank" class="endpoint-row" data-search="/api/recent-sales recent latest sales">
             <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/api/sales" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/api/sales</span>
-              </a>
+              <span class="method-badge">GET</span>
+              <span class="endpoint-path">/api/recent-sales</span>
             </div>
-            <span class="endpoint-desc">Sales Transaction Records & Invoice History</span>
-          </div>
+            <span class="endpoint-desc">Most Recent Completed Sales Transactions <span class="external-icon">↗</span></span>
+          </a>
 
-          <div class="endpoint-row" data-search="/api/recent-sales get recent">
+          <a href="/api/receipt/40001" target="_blank" class="endpoint-row" data-search="/api/receipt invoice receipt details">
             <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/api/recent-sales" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/api/recent-sales</span>
-              </a>
-            </div>
-            <span class="endpoint-desc">Most Recent Completed Sales Transactions</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/receipt get receipt">
-            <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
+              <span class="method-badge">GET</span>
               <span class="endpoint-path">/api/receipt/:invoiceNo</span>
             </div>
-            <span class="endpoint-desc">Fetch Receipt Details by Invoice Number</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/receipt-history delete">
-            <div class="endpoint-left">
-              <span class="method-badge badge-DELETE">DELETE</span>
-              <span class="endpoint-path">/api/receipt-history/:invoiceNo</span>
-            </div>
-            <span class="endpoint-desc">Delete Single Receipt Record</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/receipt-history delete all">
-            <div class="endpoint-left">
-              <span class="method-badge badge-DELETE">DELETE</span>
-              <span class="endpoint-path">/api/receipt-history</span>
-            </div>
-            <span class="endpoint-desc">Clear Entire Receipt History</span>
-          </div>
+            <span class="endpoint-desc">Fetch Receipt Details by Invoice Number <span class="external-icon">↗</span></span>
+          </a>
         </div>
       </div>
 
-      <!-- 3. BAKONG KHQR PAYMENTS -->
-      <div class="category-group" data-category="khqr">
-        <div class="category-title">
-          <span>🇰🇭</span> BAKONG KHQR DIGITAL PAYMENT GATEWAY
-        </div>
-        <div class="endpoints-list">
-          <div class="endpoint-row" data-search="/api/khqr/generate post khqr">
-            <div class="endpoint-left">
-              <span class="method-badge badge-POST">POST</span>
-              <span class="endpoint-path">/api/khqr/generate</span>
-            </div>
-            <span class="endpoint-desc">Generate Bakong KHQR String & MD5 Hash</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/khqr/status get khqr">
-            <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <span class="endpoint-path">/api/khqr/status</span>
-            </div>
-            <span class="endpoint-desc">Query KHQR Transaction Status by MD5</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/khqr/mock-paid post mock">
-            <div class="endpoint-left">
-              <span class="method-badge badge-POST">POST</span>
-              <span class="endpoint-path">/api/khqr/mock-paid</span>
-            </div>
-            <span class="endpoint-desc">Simulate Paid Status for Test Environment</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 4. PROMOTIONS & DISCOUNTS -->
+      <!-- 3. PROMOTIONS & MARKETING -->
       <div class="category-group" data-category="promotions">
         <div class="category-title">
           <span>🎁</span> PROMOTIONS & CAMPAIGN DISCOUNTS
         </div>
         <div class="endpoints-list">
-          <div class="endpoint-row" data-search="/api/promotions get promotions">
+          <a href="/api/promotions" target="_blank" class="endpoint-row" data-search="/api/promotions discounts promo campaigns">
             <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/api/promotions" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/api/promotions</span>
-              </a>
-            </div>
-            <span class="endpoint-desc">Active Promotion Campaigns & Rules</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/promotions/next-id get next id">
-            <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/api/promotions/next-id" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/api/promotions/next-id</span>
-              </a>
-            </div>
-            <span class="endpoint-desc">Get Next Auto Promotion ID</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/promotions post create">
-            <div class="endpoint-left">
-              <span class="method-badge badge-POST">POST</span>
+              <span class="method-badge">GET</span>
               <span class="endpoint-path">/api/promotions</span>
             </div>
-            <span class="endpoint-desc">Create New Promotional Discount</span>
-          </div>
+            <span class="endpoint-desc">Active Promotion Campaigns & Rules <span class="external-icon">↗</span></span>
+          </a>
 
-          <div class="endpoint-row" data-search="/api/promotions put update">
+          <a href="/api/promotions/next-id" target="_blank" class="endpoint-row" data-search="/api/promotions/next-id next promotion id">
             <div class="endpoint-left">
-              <span class="method-badge badge-PUT">PUT</span>
-              <span class="endpoint-path">/api/promotions/:id</span>
+              <span class="method-badge">GET</span>
+              <span class="endpoint-path">/api/promotions/next-id</span>
             </div>
-            <span class="endpoint-desc">Update Promotion Campaign Details</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/promotions delete remove">
-            <div class="endpoint-left">
-              <span class="method-badge badge-DELETE">DELETE</span>
-              <span class="endpoint-path">/api/promotions/:id</span>
-            </div>
-            <span class="endpoint-desc">Delete Promotion Campaign</span>
-          </div>
+            <span class="endpoint-desc">Get Next Auto Promotion ID <span class="external-icon">↗</span></span>
+          </a>
         </div>
       </div>
 
-      <!-- 5. STAFF & EMPLOYEES -->
+      <!-- 4. STAFF & EMPLOYEES -->
       <div class="category-group" data-category="staff">
         <div class="category-title">
-          <span>👥</span> STAFF & EMPLOYEE MANAGEMENT
+          <span>👥</span> STAFF, EMPLOYEES & ACCOUNTS
         </div>
         <div class="endpoints-list">
-          <div class="endpoint-row" data-search="/api/employees get employees">
+          <a href="/api/employees" target="_blank" class="endpoint-row" data-search="/api/employees staff workers list">
             <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/api/employees" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/api/employees</span>
-              </a>
-            </div>
-            <span class="endpoint-desc">List All Registered Staff & Employees</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/employees post create">
-            <div class="endpoint-left">
-              <span class="method-badge badge-POST">POST</span>
+              <span class="method-badge">GET</span>
               <span class="endpoint-path">/api/employees</span>
             </div>
-            <span class="endpoint-desc">Register New Employee Record</span>
-          </div>
+            <span class="endpoint-desc">List All Registered Staff & Employees <span class="external-icon">↗</span></span>
+          </a>
 
-          <div class="endpoint-row" data-search="/api/employees put update">
+          <a href="/api/accounts" target="_blank" class="endpoint-row" data-search="/api/accounts users admin cashiers">
             <div class="endpoint-left">
-              <span class="method-badge badge-PUT">PUT</span>
-              <span class="endpoint-path">/api/employees/:employeeNumber</span>
-            </div>
-            <span class="endpoint-desc">Update Employee Information</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/employees delete remove">
-            <div class="endpoint-left">
-              <span class="method-badge badge-DELETE">DELETE</span>
-              <span class="endpoint-path">/api/employees/:employeeNumber</span>
-            </div>
-            <span class="endpoint-desc">Delete Employee Record</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 6. ADMINISTRATION & SECURITY -->
-      <div class="category-group" data-category="admin">
-        <div class="category-title">
-          <span>⚙️</span> ADMINISTRATION, SECURITY & USER ACCOUNTS
-        </div>
-        <div class="endpoints-list">
-          <div class="endpoint-row" data-search="/api/login post auth">
-            <div class="endpoint-left">
-              <span class="method-badge badge-POST">POST</span>
-              <span class="endpoint-path">/api/login</span>
-            </div>
-            <span class="endpoint-desc">Admin & Cashier Authentication / Token Generation</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/verify-token post verify">
-            <div class="endpoint-left">
-              <span class="method-badge badge-POST">POST</span>
-              <span class="endpoint-path">/api/verify-token</span>
-            </div>
-            <span class="endpoint-desc">Verify Active Session Token Validity</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/accounts get accounts">
-            <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/api/accounts" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/api/accounts</span>
-              </a>
-            </div>
-            <span class="endpoint-desc">Manage System User Accounts & Roles</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/accounts post create">
-            <div class="endpoint-left">
-              <span class="method-badge badge-POST">POST</span>
+              <span class="method-badge">GET</span>
               <span class="endpoint-path">/api/accounts</span>
             </div>
-            <span class="endpoint-desc">Create New Staff User Account</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/accounts put update">
-            <div class="endpoint-left">
-              <span class="method-badge badge-PUT">PUT</span>
-              <span class="endpoint-path">/api/accounts/:username</span>
-            </div>
-            <span class="endpoint-desc">Update Account Details & Role</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/accounts patch password">
-            <div class="endpoint-left">
-              <span class="method-badge badge-PATCH">PATCH</span>
-              <span class="endpoint-path">/api/accounts/:username/password</span>
-            </div>
-            <span class="endpoint-desc">Update User Account Password</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/accounts patch profile">
-            <div class="endpoint-left">
-              <span class="method-badge badge-PATCH">PATCH</span>
-              <span class="endpoint-path">/api/accounts/:username/profile</span>
-            </div>
-            <span class="endpoint-desc">Update User Profile Information</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/accounts delete remove">
-            <div class="endpoint-left">
-              <span class="method-badge badge-DELETE">DELETE</span>
-              <span class="endpoint-path">/api/accounts/:username</span>
-            </div>
-            <span class="endpoint-desc">Delete User Account</span>
-          </div>
+            <span class="endpoint-desc">Manage System User Accounts & Roles <span class="external-icon">↗</span></span>
+          </a>
         </div>
       </div>
 
-      <!-- 7. ANALYTICS & SYSTEM MONITORING -->
+      <!-- 5. ANALYTICS & SYSTEM MONITORING -->
       <div class="category-group" data-category="analytics">
         <div class="category-title">
           <span>📊</span> ANALYTICS, STATS & SYSTEM MONITORING
         </div>
         <div class="endpoints-list">
-          <div class="endpoint-row" data-search="/api/total-products get stats">
+          <a href="/api/total-products" target="_blank" class="endpoint-row" data-search="/api/total-products stats count total">
             <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/api/total-products" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/api/total-products</span>
-              </a>
+              <span class="method-badge">GET</span>
+              <span class="endpoint-path">/api/total-products</span>
             </div>
-            <span class="endpoint-desc">Total Product Inventory Count</span>
-          </div>
+            <span class="endpoint-desc">Total Product Inventory Count <span class="external-icon">↗</span></span>
+          </a>
 
-          <div class="endpoint-row" data-search="/api/total-revenue get revenue">
+          <a href="/api/total-revenue" target="_blank" class="endpoint-row" data-search="/api/total-revenue stats revenue sales total">
             <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/api/total-revenue" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/api/total-revenue</span>
-              </a>
+              <span class="method-badge">GET</span>
+              <span class="endpoint-path">/api/total-revenue</span>
             </div>
-            <span class="endpoint-desc">Total Sales Revenue Calculation</span>
-          </div>
+            <span class="endpoint-desc">Total Sales Revenue Calculation <span class="external-icon">↗</span></span>
+          </a>
 
-          <div class="endpoint-row" data-search="/api/total-employees get employees count">
+          <a href="/api/total-employees" target="_blank" class="endpoint-row" data-search="/api/total-employees staff count stats">
             <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/api/total-employees" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/api/total-employees</span>
-              </a>
+              <span class="method-badge">GET</span>
+              <span class="endpoint-path">/api/total-employees</span>
             </div>
-            <span class="endpoint-desc">Total Active Employees Count</span>
-          </div>
+            <span class="endpoint-desc">Total Active Employees Count <span class="external-icon">↗</span></span>
+          </a>
 
-          <div class="endpoint-row" data-search="/health get health">
+          <a href="/health" target="_blank" class="endpoint-row" data-search="/health system database uptime ping">
             <div class="endpoint-left">
-              <span class="method-badge badge-GET">GET</span>
-              <a href="/health" target="_blank" class="view-link" title="Click to view JSON">
-                <span class="endpoint-path">/health</span>
-              </a>
+              <span class="method-badge">GET</span>
+              <span class="endpoint-path">/health</span>
             </div>
-            <span class="endpoint-desc">System Uptime & Database Health Status</span>
-          </div>
+            <span class="endpoint-desc">System Uptime & Database Health Status <span class="external-icon">↗</span></span>
+          </a>
         </div>
       </div>
 
-      <!-- 8. MEDIA & FILE UPLOADS -->
-      <div class="category-group" data-category="uploads">
-        <div class="category-title">
-          <span>📁</span> MEDIA STUDIO & FILE UPLOADS
-        </div>
-        <div class="endpoints-list">
-          <div class="endpoint-row" data-search="/api/upload post product image">
-            <div class="endpoint-left">
-              <span class="method-badge badge-POST">POST</span>
-              <span class="endpoint-path">/api/upload</span>
-            </div>
-            <span class="endpoint-desc">Upload Product Images to Local / Cloud Storage</span>
-          </div>
-
-          <div class="endpoint-row" data-search="/api/upload/staff post staff image">
-            <div class="endpoint-left">
-              <span class="method-badge badge-POST">POST</span>
-              <span class="endpoint-path">/api/upload/staff</span>
-            </div>
-            <span class="endpoint-desc">Upload Staff & Employee Profile Photos</span>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Footer -->
