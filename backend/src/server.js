@@ -37,13 +37,39 @@ app.use(
 );
 app.use(express.json());
 
-// Simple browser-friendly checks for the API service.
-app.get("/", (req, res) => {
+// Interactive API Gateway & Documentation Portal for browsers, with JSON fallback for clients
+const dashboardHtmlPath = path.join(__dirname, "views", "api-dashboard.html");
+const postmanFilePath = path.join(__dirname, "..", "..", "postman", "Mart-POS.postman_collection.json");
+
+app.get(["/", "/docs", "/api-docs"], (req, res) => {
+  const wantsJson = req.query.format === "json" ||
+    (req.headers.accept && req.headers.accept.includes("application/json") && !req.headers.accept.includes("text/html"));
+
+  if (wantsJson) {
+    return res.json({
+      name: "Mart POS Backend",
+      status: "ok",
+      api: "/api",
+      docs: "/docs"
+    });
+  }
+
+  if (fs.existsSync(dashboardHtmlPath)) {
+    return res.sendFile(dashboardHtmlPath);
+  }
+
   res.json({
     name: "Mart POS Backend",
     status: "ok",
     api: "/api"
   });
+});
+
+app.get("/api/docs/postman", (req, res) => {
+  if (fs.existsSync(postmanFilePath)) {
+    return res.download(postmanFilePath, "Mart-POS.postman_collection.json");
+  }
+  res.status(404).json({ message: "Postman collection not found" });
 });
 
 app.get("/health", (req, res) => {

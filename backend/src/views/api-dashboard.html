@@ -1,0 +1,2188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mart POS - API Gateway & Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #090d16;
+      --bg-surface: #0f172a;
+      --bg-card: rgba(18, 26, 47, 0.75);
+      --bg-card-hover: rgba(28, 40, 70, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.6);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --accent-indigo: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-violet: #8b5cf6;
+      
+      --method-get-bg: rgba(6, 182, 212, 0.15);
+      --method-get-text: #38bdf8;
+      --method-get-border: rgba(56, 189, 248, 0.35);
+      
+      --method-post-bg: rgba(16, 185, 129, 0.15);
+      --method-post-text: #34d399;
+      --method-post-border: rgba(52, 211, 153, 0.35);
+      
+      --method-put-bg: rgba(245, 158, 11, 0.15);
+      --method-put-text: #fbbf24;
+      --method-put-border: rgba(251, 191, 36, 0.35);
+
+      --method-patch-bg: rgba(139, 92, 246, 0.15);
+      --method-patch-text: #a78bfa;
+      --method-patch-border: rgba(167, 139, 250, 0.35);
+
+      --method-delete-bg: rgba(244, 63, 94, 0.15);
+      --method-delete-text: #fb7185;
+      --method-delete-border: rgba(251, 113, 133, 0.35);
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 35%),
+        radial-gradient(circle at 50% 90%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-base);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #243048;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+
+    /* Top Navigation Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(9, 13, 22, 0.85);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.85rem 1.75rem;
+    }
+
+    .header-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #4f46e5, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+      font-size: 1.3rem;
+    }
+
+    .brand-text h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+
+    .brand-text p {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      padding: 0.35rem 0.8rem;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.95rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.35);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.5);
+    }
+
+    .btn-runner {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
+    }
+    .btn-runner:hover {
+      background: linear-gradient(135deg, #047857, #059669);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border-color: var(--border-color);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text-secondary);
+      border-color: var(--border-color);
+    }
+    .btn-outline:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 1.75rem;
+    }
+
+    /* Hero / Overview Metrics */
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.1rem;
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.25s ease;
+    }
+    .stat-card:hover {
+      border-color: rgba(99, 102, 241, 0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-icon-wrapper {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+    .stat-endpoints { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+    .stat-categories { background: rgba(6, 182, 212, 0.15); color: #38bdf8; }
+    .stat-tested { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .stat-uptime { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
+    .stat-info .stat-value {
+      font-size: 1.45rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .stat-info .stat-label {
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Filter & Search Bar */
+    .controls-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      backdrop-filter: blur(12px);
+      margin-bottom: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 260px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.6rem 1rem 0.6rem 2.4rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-indigo);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    }
+    .search-icon {
+      position: absolute;
+      left: 0.8rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+
+    .select-category {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.6rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+    }
+    .select-category:focus {
+      border-color: var(--accent-indigo);
+    }
+
+    .method-filters {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .filter-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+    }
+    .filter-btn.active {
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      border-color: rgba(99, 102, 241, 0.5);
+    }
+    .filter-btn[data-method="GET"].active {
+      background: var(--method-get-bg);
+      color: var(--method-get-text);
+      border-color: var(--method-get-border);
+    }
+    .filter-btn[data-method="POST"].active {
+      background: var(--method-post-bg);
+      color: var(--method-post-text);
+      border-color: var(--method-post-border);
+    }
+    .filter-btn[data-method="PUT"].active {
+      background: var(--method-put-bg);
+      color: var(--method-put-text);
+      border-color: var(--method-put-border);
+    }
+    .filter-btn[data-method="PATCH"].active {
+      background: var(--method-patch-bg);
+      color: var(--method-patch-text);
+      border-color: var(--method-patch-border);
+    }
+    .filter-btn[data-method="DELETE"].active {
+      background: var(--method-delete-bg);
+      color: var(--method-delete-text);
+      border-color: var(--method-delete-border);
+    }
+
+    /* Section Headers */
+    .category-section {
+      margin-bottom: 2rem;
+    }
+
+    .category-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.45rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .category-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--text-primary);
+    }
+
+    .category-count {
+      font-size: 0.72rem;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+    }
+
+    /* Endpoint Card */
+    .endpoint-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .endpoint-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(12px);
+    }
+    .endpoint-card:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+    }
+
+    .endpoint-header {
+      padding: 0.85rem 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .endpoint-main-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .method-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 0.3rem 0.65rem;
+      border-radius: var(--radius-sm);
+      letter-spacing: 0.03em;
+      min-width: 65px;
+      text-align: center;
+      border: 1px solid transparent;
+    }
+    .badge-GET {
+      background: var(--method-get-bg);
+      color: var(--method-get-text);
+      border-color: var(--method-get-border);
+    }
+    .badge-POST {
+      background: var(--method-post-bg);
+      color: var(--method-post-text);
+      border-color: var(--method-post-border);
+    }
+    .badge-PUT {
+      background: var(--method-put-bg);
+      color: var(--method-put-text);
+      border-color: var(--method-put-border);
+    }
+    .badge-PATCH {
+      background: var(--method-patch-bg);
+      color: var(--method-patch-text);
+      border-color: var(--method-patch-border);
+    }
+    .badge-DELETE {
+      background: var(--method-delete-bg);
+      color: var(--method-delete-text);
+      border-color: var(--method-delete-border);
+    }
+
+    .endpoint-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      word-break: break-all;
+    }
+    .endpoint-path .param {
+      color: #38bdf8;
+    }
+
+    .endpoint-desc {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-left: 0.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .endpoint-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .last-status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      display: none;
+      font-weight: 600;
+    }
+    .last-status.success {
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+    .last-status.error {
+      display: inline-block;
+      background: rgba(244, 63, 94, 0.2);
+      color: #fb7185;
+      border: 1px solid rgba(251, 113, 133, 0.3);
+    }
+
+    .toggle-icon {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      transition: transform 0.2s;
+    }
+    .endpoint-card.expanded .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    /* Expanded Try-It-Out Panel */
+    .endpoint-body {
+      display: none;
+      padding: 1.1rem;
+      border-top: 1px solid var(--border-color);
+      background: rgba(11, 17, 33, 0.65);
+    }
+    .endpoint-card.expanded .endpoint-body {
+      display: block;
+    }
+
+    .endpoint-details-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+    @media (min-width: 992px) {
+      .endpoint-details-grid {
+        grid-template-columns: 1.1fr 1fr;
+      }
+    }
+
+    .field-group {
+      margin-bottom: 0.9rem;
+    }
+    .field-label {
+      display: block;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .input-control, .textarea-control {
+      width: 100%;
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      outline: none;
+      transition: border 0.15s;
+    }
+    .input-control:focus, .textarea-control:focus {
+      border-color: var(--accent-indigo);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .textarea-control {
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.4;
+    }
+
+    .params-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .param-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .param-name {
+      font-size: 0.74rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .button-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* Response Display */
+    .response-pane {
+      background: #060911;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 200px;
+    }
+
+    .response-header {
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.55rem 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+    }
+
+    .response-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .res-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 0.72rem;
+    }
+    .res-badge.code-2xx {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+    .res-badge.code-4xx, .res-badge.code-5xx {
+      background: rgba(244, 63, 94, 0.2);
+      color: #fb7185;
+      border: 1px solid rgba(251, 113, 133, 0.3);
+    }
+    .res-badge.code-3xx {
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .res-time {
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .response-body {
+      padding: 0.85rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      overflow-x: auto;
+      flex: 1;
+      max-height: 380px;
+      background: #070b14;
+      color: #cbd5e1;
+      white-space: pre;
+    }
+
+    /* Modal Styles */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 780px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      border-radius: var(--radius-sm);
+    }
+    .modal-close:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    /* Test All Runner Styles */
+    .progress-bar-container {
+      background: rgba(255, 255, 255, 0.08);
+      height: 8px;
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #10b981, #06b6d4);
+      transition: width 0.25s ease;
+    }
+
+    .runner-stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+      padding: 0.85rem;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+    }
+
+    .runner-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .runner-table th, .runner-table td {
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .runner-table th {
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* Json Highlight Colors */
+    .json-key { color: #38bdf8; }
+    .json-string { color: #34d399; }
+    .json-number { color: #fbbf24; }
+    .json-boolean { color: #a78bfa; }
+    .json-null { color: #f43f5e; }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      z-index: 300;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header>
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-text">
+          <h1>Mart POS API Explorer <span class="brand-badge">v1.0.0</span></h1>
+          <p>Interactive REST API Gateway & Documentation</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="status-pill">
+          <div class="status-dot"></div>
+          <span id="serverStatusText">MongoDB Connected • Port 3000</span>
+        </div>
+
+        <button class="btn btn-runner" id="btnRunAllChecks" onclick="openTestAllModal()">
+          <span>⚡</span> Check All APIs
+        </button>
+
+        <button class="btn btn-secondary" onclick="openAuthModal()">
+          <span>🔑</span> <span id="authStatusText">Set Auth Token</span>
+        </button>
+
+        <a href="http://localhost:5173" target="_blank" class="btn btn-outline" title="Open Mart POS Application">
+          <span>🚀</span> Open POS App
+        </a>
+
+        <a href="/?format=json" class="btn btn-outline" title="Switch to raw JSON response">
+          <span>{ }</span> Raw JSON
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Metric Overview Cards -->
+    <div class="hero-stats">
+      <div class="stat-card">
+        <div class="stat-icon-wrapper stat-endpoints">🔌</div>
+        <div class="stat-info">
+          <div class="stat-value" id="totalEndpointsCount">40</div>
+          <div class="stat-label">Total API Endpoints</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon-wrapper stat-categories">📂</div>
+        <div class="stat-info">
+          <div class="stat-value" id="totalCategoriesCount">10</div>
+          <div class="stat-label">System Modules</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon-wrapper stat-tested">✅</div>
+        <div class="stat-info">
+          <div class="stat-value" id="testedCount">0</div>
+          <div class="stat-label">Endpoints Tested</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon-wrapper stat-uptime">⚡</div>
+        <div class="stat-info">
+          <div class="stat-value" id="systemLatency">~12ms</div>
+          <div class="stat-label">Avg Latency</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="controls-wrapper">
+      <div class="search-row">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search by route path, keyword, or action... (e.g. /products, checkout, khqr)">
+        </div>
+
+        <select id="categorySelect" class="select-category">
+          <option value="ALL">All Categories</option>
+          <option value="Auth & Users">🔐 Auth & Users</option>
+          <option value="Inventory & Products">📦 Inventory & Products</option>
+          <option value="Product Categories">🏷️ Product Categories</option>
+          <option value="POS Checkout">🛒 POS Checkout</option>
+          <option value="Sales & Receipts">🧾 Sales & Receipts</option>
+          <option value="Bakong KHQR Payments">🇰🇭 Bakong KHQR Payments</option>
+          <option value="Promotions">🎁 Promotions & Discounts</option>
+          <option value="Staff & Employees">👥 Staff & Employees</option>
+          <option value="Analytics & Dashboard">📊 Analytics & Dashboard</option>
+          <option value="File Uploads">📁 File Uploads</option>
+        </select>
+      </div>
+
+      <div class="method-filters">
+        <span style="font-size: 0.78rem; color: var(--text-muted); margin-right: 0.4rem;">Methods:</span>
+        <button class="filter-btn active" data-method="ALL">ALL</button>
+        <button class="filter-btn" data-method="GET">GET</button>
+        <button class="filter-btn" data-method="POST">POST</button>
+        <button class="filter-btn" data-method="PUT">PUT</button>
+        <button class="filter-btn" data-method="PATCH">PATCH</button>
+        <button class="filter-btn" data-method="DELETE">DELETE</button>
+      </div>
+    </div>
+
+    <!-- Endpoints Container -->
+    <div id="endpointsContainer">
+      <!-- Generated via JS -->
+    </div>
+  </main>
+
+  <!-- Test All APIs Modal -->
+  <div class="modal-backdrop" id="testAllModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>⚡ Automated API Health & Endpoint Runner</h2>
+        <button class="modal-close" onclick="closeTestAllModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+          Runs comprehensive live health verification tests across all query and read endpoints to ensure database connectivity and endpoint responsiveness.
+        </p>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="runnerProgress"></div>
+        </div>
+
+        <div class="runner-stats">
+          <div>Status: <strong id="runnerStatus" style="color: #38bdf8;">Ready</strong></div>
+          <div>Passed: <strong id="runnerPassed" style="color: #34d399;">0</strong></div>
+          <div>Failed: <strong id="runnerFailed" style="color: #fb7185;">0</strong></div>
+          <div>Total: <strong id="runnerTotal">13</strong></div>
+        </div>
+
+        <div style="max-height: 340px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+          <table class="runner-table">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Status</th>
+                <th>Latency</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody id="runnerResultsBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeTestAllModal()">Close</button>
+        <button class="btn btn-runner" id="btnStartBatchTest" onclick="startBatchHealthCheck()">
+          <span>▶</span> Start Health Check
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth Token Modal -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal-content" style="max-width: 520px;">
+      <div class="modal-header">
+        <h2>🔑 Authentication & Token Manager</h2>
+        <button class="modal-close" onclick="closeAuthModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+          Configure authorization for testing protected API endpoints. You can log in directly or manually paste a Bearer token.
+        </p>
+
+        <div class="field-group">
+          <label class="field-label">Quick Auto-Login</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-primary" onclick="quickLogin('Sorith', 'admin123')" style="flex: 1;">
+              👑 Login as Admin (Sorith)
+            </button>
+            <button class="btn btn-secondary" onclick="quickLogin('admin', 'admin123')" style="flex: 1;">
+              👤 Login as admin
+            </button>
+          </div>
+          <small style="color: var(--text-muted); font-size: 0.72rem; margin-top: 0.35rem; display: block;">
+            Hits POST /api/login and saves the session token automatically.
+          </small>
+        </div>
+
+        <div class="field-group" style="margin-top: 1.25rem;">
+          <label class="field-label">Bearer Token</label>
+          <input type="text" id="manualTokenInput" class="input-control" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+        </div>
+
+        <div id="authUserInfo" style="display: none; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: var(--radius-sm); font-size: 0.8rem; color: #34d399;">
+          <!-- User info details -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="clearToken()">Clear Token</button>
+        <button class="btn btn-secondary" onclick="closeAuthModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveManualToken()">Save Token</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toastNotification">
+    <span id="toastIcon">✔</span>
+    <span id="toastMessage">Action completed</span>
+  </div>
+
+  <!-- API Catalog Data and Logic -->
+  <script>
+    const API_ENDPOINTS = [
+      // 1. Auth & Users
+      {
+        id: "auth-login",
+        category: "Auth & Users",
+        method: "POST",
+        path: "/api/login",
+        desc: "Authenticate user and issue authentication token",
+        defaultBody: {
+          username: "Sorith",
+          password: "admin123"
+        }
+      },
+      {
+        id: "auth-verify",
+        category: "Auth & Users",
+        method: "POST",
+        path: "/api/verify-token",
+        desc: "Validate token signature and active user session",
+        defaultBody: {
+          token: ""
+        }
+      },
+      {
+        id: "accounts-list",
+        category: "Auth & Users",
+        method: "GET",
+        path: "/api/accounts",
+        desc: "List all user accounts in the system",
+        isSafeRead: true
+      },
+      {
+        id: "accounts-create",
+        category: "Auth & Users",
+        method: "POST",
+        path: "/api/accounts",
+        desc: "Create a new user account",
+        defaultBody: {
+          username: "cashier_demo",
+          password: "Password123!",
+          role: "Cashier",
+          employeeNumber: 1005,
+          fullName: "Demo Cashier",
+          phoneNumber: "012345678"
+        }
+      },
+      {
+        id: "accounts-update",
+        category: "Auth & Users",
+        method: "PUT",
+        path: "/api/accounts/:username",
+        desc: "Update account details and role",
+        pathParams: { username: "Vatana" },
+        defaultBody: {
+          role: "Cashier",
+          fullName: "Ou Sovanvatana",
+          status: "Active"
+        }
+      },
+      {
+        id: "accounts-password",
+        category: "Auth & Users",
+        method: "PATCH",
+        path: "/api/accounts/:username/password",
+        desc: "Change account password",
+        pathParams: { username: "Vatana" },
+        defaultBody: {
+          oldPassword: "oldpassword123",
+          newPassword: "newpassword123"
+        }
+      },
+      {
+        id: "accounts-profile",
+        category: "Auth & Users",
+        method: "PATCH",
+        path: "/api/accounts/:username/profile",
+        desc: "Update account personal profile details",
+        pathParams: { username: "Vatana" },
+        defaultBody: {
+          fullName: "Ou Sovanvatana Updated",
+          phoneNumber: "081999888"
+        }
+      },
+      {
+        id: "accounts-delete",
+        category: "Auth & Users",
+        method: "DELETE",
+        path: "/api/accounts/:username",
+        desc: "Delete account by username",
+        pathParams: { username: "cashier_demo" }
+      },
+
+      // 2. Inventory & Products
+      {
+        id: "products-list",
+        category: "Inventory & Products",
+        method: "GET",
+        path: "/api/products",
+        desc: "Retrieve all products with category data",
+        queryParams: { search: "" },
+        isSafeRead: true
+      },
+      {
+        id: "products-low-stock",
+        category: "Inventory & Products",
+        method: "GET",
+        path: "/api/low-stock",
+        desc: "Get list of inventory items with low stock",
+        isSafeRead: true
+      },
+      {
+        id: "products-create",
+        category: "Inventory & Products",
+        method: "POST",
+        path: "/api/products",
+        desc: "Add a new product to inventory",
+        defaultBody: {
+          productCode: "P099",
+          productName: "Mineral Water 500ml",
+          categoryID: "C001",
+          categoryName: "Vital",
+          description: "Refreshing bottled water",
+          buyPrice: 0.2,
+          salePrice: 0.5,
+          stock: 60,
+          image: ""
+        }
+      },
+      {
+        id: "products-update",
+        category: "Inventory & Products",
+        method: "PUT",
+        path: "/api/products/:code",
+        desc: "Update existing product details",
+        pathParams: { code: "P001" },
+        defaultBody: {
+          productName: "Vita Mineral Water",
+          buyPrice: 0.18,
+          salePrice: 0.3,
+          stock: 50
+        }
+      },
+      {
+        id: "products-delete",
+        category: "Inventory & Products",
+        method: "DELETE",
+        path: "/api/products/:code",
+        desc: "Delete a product by code",
+        pathParams: { code: "P099" }
+      },
+
+      // 3. Product Categories
+      {
+        id: "categories-list",
+        category: "Product Categories",
+        method: "GET",
+        path: "/api/categories",
+        desc: "Retrieve all product categories",
+        isSafeRead: true
+      },
+      {
+        id: "categories-create",
+        category: "Product Categories",
+        method: "POST",
+        path: "/api/categories",
+        desc: "Create a new product category",
+        defaultBody: {
+          categoryID: "C099",
+          categoryName: "Fresh Bakery",
+          description: "Fresh daily bread and baked goods"
+        }
+      },
+      {
+        id: "categories-update",
+        category: "Product Categories",
+        method: "PUT",
+        path: "/api/categories/:id",
+        desc: "Update category by ID",
+        pathParams: { id: "C099" },
+        defaultBody: {
+          categoryName: "Fresh Bakery & Pastries",
+          description: "Updated bakery category"
+        }
+      },
+      {
+        id: "categories-delete",
+        category: "Product Categories",
+        method: "DELETE",
+        path: "/api/categories/:id",
+        desc: "Delete a product category",
+        pathParams: { id: "C099" }
+      },
+
+      // 4. POS Checkout
+      {
+        id: "pos-checkout",
+        category: "POS Checkout",
+        method: "POST",
+        path: "/api/checkout",
+        desc: "Process sale transaction, update stock, and generate invoice",
+        defaultBody: {
+          employeeNumber: 1,
+          paymentMethod: "Cash",
+          status: "Completed",
+          receivedUSD: 5.0,
+          receivedKHR: 0,
+          items: [
+            {
+              productCode: "P001",
+              productName: "Vita",
+              quantity: 2,
+              price: 0.25,
+              subTotal: 0.5
+            }
+          ]
+        }
+      },
+
+      // 5. Sales & Receipts
+      {
+        id: "sales-list",
+        category: "Sales & Receipts",
+        method: "GET",
+        path: "/api/sales",
+        desc: "List sales transaction history",
+        queryParams: { date: "" },
+        isSafeRead: true
+      },
+      {
+        id: "sales-recent",
+        category: "Sales & Receipts",
+        method: "GET",
+        path: "/api/recent-sales",
+        desc: "Get most recent sales transactions",
+        isSafeRead: true
+      },
+      {
+        id: "receipt-get",
+        category: "Sales & Receipts",
+        method: "GET",
+        path: "/api/receipt/:invoiceNo",
+        desc: "Fetch sale receipt details by invoice number",
+        pathParams: { invoiceNo: "40001" },
+        isSafeRead: false
+      },
+      {
+        id: "receipt-delete-single",
+        category: "Sales & Receipts",
+        method: "DELETE",
+        path: "/api/receipt-history/:invoiceNo",
+        desc: "Delete a specific receipt record",
+        pathParams: { invoiceNo: "40001" }
+      },
+      {
+        id: "receipt-delete-all",
+        category: "Sales & Receipts",
+        method: "DELETE",
+        path: "/api/receipt-history",
+        desc: "Clear all receipt history records"
+      },
+
+      // 6. Bakong KHQR Payments
+      {
+        id: "khqr-generate",
+        category: "Bakong KHQR Payments",
+        method: "POST",
+        path: "/api/khqr/generate",
+        desc: "Generate KHQR QR code string and MD5 hash for payment",
+        defaultBody: {
+          amount: 2.5,
+          currency: "USD"
+        }
+      },
+      {
+        id: "khqr-status",
+        category: "Bakong KHQR Payments",
+        method: "GET",
+        path: "/api/khqr/status",
+        desc: "Check payment status for a generated KHQR by MD5",
+        queryParams: { md5: "sample_md5_hash_here" }
+      },
+      {
+        id: "khqr-mock-paid",
+        category: "Bakong KHQR Payments",
+        method: "POST",
+        path: "/api/khqr/mock-paid",
+        desc: "Mock / Simulate KHQR payment completion for testing",
+        defaultBody: {
+          md5: "sample_md5_hash_here"
+        }
+      },
+
+      // 7. Promotions & Discounts
+      {
+        id: "promotions-list",
+        category: "Promotions",
+        method: "GET",
+        path: "/api/promotions",
+        desc: "List all active promotion campaigns",
+        isSafeRead: true
+      },
+      {
+        id: "promotions-next-id",
+        category: "Promotions",
+        method: "GET",
+        path: "/api/promotions/next-id",
+        desc: "Get the next incremental promotion ID",
+        isSafeRead: true
+      },
+      {
+        id: "promotions-create",
+        category: "Promotions",
+        method: "POST",
+        path: "/api/promotions",
+        desc: "Create a promotional discount rule",
+        defaultBody: {
+          productCode: "P001",
+          productName: "Vita",
+          discountType: "percent",
+          discountValue: 15,
+          startDate: "2026-09-01",
+          endDate: "2026-10-31",
+          status: "Active"
+        }
+      },
+      {
+        id: "promotions-update",
+        category: "Promotions",
+        method: "PUT",
+        path: "/api/promotions/:id",
+        desc: "Update an existing promotion",
+        pathParams: { id: "PR002" },
+        defaultBody: {
+          discountValue: 20,
+          status: "Active"
+        }
+      },
+      {
+        id: "promotions-delete",
+        category: "Promotions",
+        method: "DELETE",
+        path: "/api/promotions/:id",
+        desc: "Delete a promotion campaign",
+        pathParams: { id: "PR006" }
+      },
+
+      // 8. Staff & Employees
+      {
+        id: "employees-list",
+        category: "Staff & Employees",
+        method: "GET",
+        path: "/api/employees",
+        desc: "List all employees with roles and contact information",
+        isSafeRead: true
+      },
+      {
+        id: "employees-create",
+        category: "Staff & Employees",
+        method: "POST",
+        path: "/api/employees",
+        desc: "Register a new employee record",
+        defaultBody: {
+          employeeNumber: 1009,
+          firstName: "Bona",
+          lastName: "Heng",
+          gender: "Male",
+          jobTitle: "Cashier",
+          salary: 220,
+          phoneNumber: "017888999",
+          officeCode: "Mart001"
+        }
+      },
+      {
+        id: "employees-update",
+        category: "Staff & Employees",
+        method: "PUT",
+        path: "/api/employees/:employeeNumber",
+        desc: "Update employee details",
+        pathParams: { employeeNumber: "1" },
+        defaultBody: {
+          firstName: "Dy",
+          lastName: "Sorith",
+          jobTitle: "Store Manager",
+          phoneNumber: "081372444"
+        }
+      },
+      {
+        id: "employees-delete",
+        category: "Staff & Employees",
+        method: "DELETE",
+        path: "/api/employees/:employeeNumber",
+        desc: "Remove an employee record",
+        pathParams: { employeeNumber: "1009" }
+      },
+
+      // 9. Analytics & Dashboard Stats
+      {
+        id: "health-check",
+        category: "Analytics & Dashboard",
+        method: "GET",
+        path: "/health",
+        desc: "System heartbeat and database health check",
+        isSafeRead: true
+      },
+      {
+        id: "stats-products",
+        category: "Analytics & Dashboard",
+        method: "GET",
+        path: "/api/total-products",
+        desc: "Get total inventory product count",
+        isSafeRead: true
+      },
+      {
+        id: "stats-revenue",
+        category: "Analytics & Dashboard",
+        method: "GET",
+        path: "/api/total-revenue",
+        desc: "Calculate total revenue from completed sales",
+        isSafeRead: true
+      },
+      {
+        id: "stats-employees",
+        category: "Analytics & Dashboard",
+        method: "GET",
+        path: "/api/total-employees",
+        desc: "Get count of registered active employees",
+        isSafeRead: true
+      },
+
+      // 10. File Uploads
+      {
+        id: "upload-product-img",
+        category: "File Uploads",
+        method: "POST",
+        path: "/api/upload",
+        desc: "Upload product image (multipart/form-data: image file)",
+        isFormData: true
+      },
+      {
+        id: "upload-staff-img",
+        category: "File Uploads",
+        method: "POST",
+        path: "/api/upload/staff",
+        desc: "Upload employee / staff profile image (multipart/form-data: image file)",
+        isFormData: true
+      }
+    ];
+
+    // State
+    let currentAuthToken = localStorage.getItem("mart_pos_token") || "";
+    let activeFilterMethod = "ALL";
+    let activeFilterCategory = "ALL";
+    let searchQuery = "";
+    const testedEndpoints = new Set();
+
+    // DOM References
+    const container = document.getElementById("endpointsContainer");
+    const searchInput = document.getElementById("searchInput");
+    const categorySelect = document.getElementById("categorySelect");
+    const testedCountEl = document.getElementById("testedCount");
+    const authStatusText = document.getElementById("authStatusText");
+
+    // Init
+    window.addEventListener("DOMContentLoaded", () => {
+      updateAuthUI();
+      renderEndpoints();
+      pingHealth();
+
+      // Keyboard shortcut for search
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "/" && document.activeElement !== searchInput) {
+          e.preventDefault();
+          searchInput.focus();
+        }
+      });
+    });
+
+    async function pingHealth() {
+      try {
+        const start = performance.now();
+        const res = await fetch("/health");
+        const latency = Math.round(performance.now() - start);
+        if (res.ok) {
+          document.getElementById("serverStatusText").textContent = `MongoDB Connected • Port 3000 • ${latency}ms`;
+          document.getElementById("systemLatency").textContent = `${latency}ms`;
+        }
+      } catch (_) {
+        document.getElementById("serverStatusText").textContent = `Backend Offline / Connecting...`;
+      }
+    }
+
+    // Filter Listeners
+    searchInput.addEventListener("input", (e) => {
+      searchQuery = e.target.value.toLowerCase().trim();
+      renderEndpoints();
+    });
+
+    categorySelect.addEventListener("change", (e) => {
+      activeFilterCategory = e.target.value;
+      renderEndpoints();
+    });
+
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeFilterMethod = btn.dataset.method;
+        renderEndpoints();
+      });
+    });
+
+    // Render Function
+    function renderEndpoints() {
+      container.innerHTML = "";
+
+      const filtered = API_ENDPOINTS.filter(ep => {
+        const matchMethod = activeFilterMethod === "ALL" || ep.method === activeFilterMethod;
+        const matchCat = activeFilterCategory === "ALL" || ep.category === activeFilterCategory;
+        const matchSearch = !searchQuery || 
+          ep.path.toLowerCase().includes(searchQuery) || 
+          ep.desc.toLowerCase().includes(searchQuery) ||
+          ep.category.toLowerCase().includes(searchQuery);
+        return matchMethod && matchCat && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>
+            <h3>No matching endpoints found</h3>
+            <p style="font-size: 0.85rem; margin-top: 0.25rem;">Try adjusting your search query or method filter.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Group by Category
+      const grouped = {};
+      filtered.forEach(ep => {
+        if (!grouped[ep.category]) grouped[ep.category] = [];
+        grouped[ep.category].push(ep);
+      });
+
+      for (const [category, items] of Object.entries(grouped)) {
+        const section = document.createElement("section");
+        section.className = "category-section";
+
+        section.innerHTML = `
+          <div class="category-header">
+            <div class="category-title">
+              <span>${getCategoryIcon(category)}</span>
+              <span>${category}</span>
+            </div>
+            <span class="category-count">${items.length} endpoint${items.length > 1 ? "s" : ""}</span>
+          </div>
+          <div class="endpoint-list" id="cat-list-${slugify(category)}"></div>
+        `;
+
+        const listEl = section.querySelector(`#cat-list-${slugify(category)}`);
+        items.forEach(ep => {
+          listEl.appendChild(createEndpointCard(ep));
+        });
+
+        container.appendChild(section);
+      }
+    }
+
+    function createEndpointCard(ep) {
+      const card = document.createElement("div");
+      card.className = "endpoint-card";
+      card.id = `card-${ep.id}`;
+
+      // Formatted path with highlighted params
+      const formattedPath = ep.path.replace(/(:\w+)/g, '<span class="param">$1</span>');
+
+      card.innerHTML = `
+        <div class="endpoint-header" onclick="toggleEndpoint('${ep.id}')">
+          <div class="endpoint-main-meta">
+            <span class="method-badge badge-${ep.method}">${ep.method}</span>
+            <span class="endpoint-path">${formattedPath}</span>
+            <span class="endpoint-desc">${ep.desc}</span>
+          </div>
+          <div class="endpoint-actions">
+            <span class="last-status" id="status-pill-${ep.id}"></span>
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.74rem;" onclick="event.stopPropagation(); executeQuickTest('${ep.id}')">
+              <span>⚡</span> Send
+            </button>
+            <span class="toggle-icon">▼</span>
+          </div>
+        </div>
+
+        <div class="endpoint-body">
+          <div class="endpoint-details-grid">
+            <div class="request-pane">
+              <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary);">
+                Request Configuration
+              </div>
+
+              ${renderPathParamsInputs(ep)}
+              ${renderQueryParamsInputs(ep)}
+              ${renderBodyEditor(ep)}
+
+              <div class="button-row">
+                <button class="btn btn-primary" onclick="executeCustomRequest('${ep.id}')">
+                  <span>🚀</span> Send Request
+                </button>
+                <button class="btn btn-outline" onclick="copyAsCurl('${ep.id}')">
+                  <span>📋</span> Copy as cURL
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div class="response-pane">
+                <div class="response-header">
+                  <span style="font-weight: 600; color: var(--text-secondary);">Response</span>
+                  <div class="response-meta" id="res-meta-${ep.id}" style="display: none;">
+                    <span class="res-badge" id="res-badge-${ep.id}">200 OK</span>
+                    <span class="res-time" id="res-time-${ep.id}">0ms</span>
+                    <button class="btn btn-outline" style="padding: 1px 6px; font-size: 0.7rem;" onclick="copyResponse('${ep.id}')">Copy</button>
+                  </div>
+                </div>
+                <div class="response-body" id="res-body-${ep.id}">// Click "Send Request" or "Send" to inspect live response</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      return card;
+    }
+
+    function renderPathParamsInputs(ep) {
+      if (!ep.pathParams) return "";
+      const inputs = Object.entries(ep.pathParams).map(([key, val]) => `
+        <div class="param-item">
+          <span class="param-name">:${key}</span>
+          <input type="text" class="input-control" id="param-${ep.id}-${key}" value="${val}">
+        </div>
+      `).join("");
+
+      return `
+        <div class="field-group">
+          <label class="field-label">Path Parameters</label>
+          <div class="params-grid">${inputs}</div>
+        </div>
+      `;
+    }
+
+    function renderQueryParamsInputs(ep) {
+      if (!ep.queryParams) return "";
+      const inputs = Object.entries(ep.queryParams).map(([key, val]) => `
+        <div class="param-item">
+          <span class="param-name">?${key}</span>
+          <input type="text" class="input-control" id="query-${ep.id}-${key}" value="${val}" placeholder="${key}">
+        </div>
+      `).join("");
+
+      return `
+        <div class="field-group">
+          <label class="field-label">Query Parameters</label>
+          <div class="params-grid">${inputs}</div>
+        </div>
+      `;
+    }
+
+    function renderBodyEditor(ep) {
+      if (ep.isFormData) {
+        return `
+          <div class="field-group">
+            <label class="field-label">Multipart Form Data (File)</label>
+            <input type="file" id="file-${ep.id}" class="input-control" style="font-family: inherit;">
+          </div>
+        `;
+      }
+      if (!["POST", "PUT", "PATCH"].includes(ep.method)) return "";
+      
+      const defaultStr = ep.defaultBody ? JSON.stringify(ep.defaultBody, null, 2) : "{}";
+      return `
+        <div class="field-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label class="field-label" style="margin-bottom: 0;">JSON Body</label>
+            <button class="btn btn-outline" style="padding: 1px 6px; font-size: 0.7rem;" onclick="formatJsonEditor('${ep.id}')">Format</button>
+          </div>
+          <textarea class="textarea-control" id="body-${ep.id}">${defaultStr}</textarea>
+        </div>
+      `;
+    }
+
+    function toggleEndpoint(id) {
+      const card = document.getElementById(`card-${id}`);
+      card.classList.toggle("expanded");
+    }
+
+    // Execution Core
+    async function executeRequest(ep, options = {}) {
+      const startTime = performance.now();
+      let targetPath = ep.path;
+
+      // Replace path parameters
+      if (ep.pathParams) {
+        for (const key of Object.keys(ep.pathParams)) {
+          const input = document.getElementById(`param-${ep.id}-${key}`);
+          const val = input ? input.value.trim() : ep.pathParams[key];
+          targetPath = targetPath.replace(`:${key}`, encodeURIComponent(val));
+        }
+      }
+
+      // Append query parameters
+      if (ep.queryParams) {
+        const params = new URLSearchParams();
+        for (const key of Object.keys(ep.queryParams)) {
+          const input = document.getElementById(`query-${ep.id}-${key}`);
+          const val = input ? input.value.trim() : ep.queryParams[key];
+          if (val) params.append(key, val);
+        }
+        const qs = params.toString();
+        if (qs) targetPath += `?${qs}`;
+      }
+
+      const headers = {
+        "Accept": "application/json"
+      };
+      if (currentAuthToken) {
+        headers["Authorization"] = `Bearer ${currentAuthToken}`;
+      }
+
+      const fetchOpts = {
+        method: ep.method,
+        headers: headers
+      };
+
+      // Request Body
+      if (["POST", "PUT", "PATCH"].includes(ep.method)) {
+        if (ep.isFormData) {
+          const fileInput = document.getElementById(`file-${ep.id}`);
+          if (fileInput && fileInput.files[0]) {
+            const formData = new FormData();
+            formData.append("image", fileInput.files[0]);
+            fetchOpts.body = formData;
+            delete fetchOpts.headers["Content-Type"];
+          }
+        } else {
+          headers["Content-Type"] = "application/json";
+          const bodyEl = document.getElementById(`body-${ep.id}`);
+          const rawBody = bodyEl ? bodyEl.value.trim() : JSON.stringify(ep.defaultBody || {});
+          try {
+            if (rawBody) {
+              fetchOpts.body = rawBody;
+            }
+          } catch (e) {
+            throw new Error("Invalid JSON in request body");
+          }
+        }
+      }
+
+      const res = await fetch(targetPath, fetchOpts);
+      const latency = Math.round(performance.now() - startTime);
+
+      let data;
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        data = await res.text();
+      }
+
+      return {
+        status: res.status,
+        statusText: res.statusText || "OK",
+        latency,
+        data,
+        targetPath,
+        method: ep.method
+      };
+    }
+
+    async function executeQuickTest(id) {
+      const ep = API_ENDPOINTS.find(e => e.id === id);
+      if (!ep) return;
+
+      const card = document.getElementById(`card-${id}`);
+      if (!card.classList.contains("expanded")) {
+        card.classList.add("expanded");
+      }
+
+      await executeCustomRequest(id);
+    }
+
+    async function executeCustomRequest(id) {
+      const ep = API_ENDPOINTS.find(e => e.id === id);
+      if (!ep) return;
+
+      const bodyEl = document.getElementById(`res-body-${id}`);
+      const metaEl = document.getElementById(`res-meta-${id}`);
+      const badgeEl = document.getElementById(`res-badge-${id}`);
+      const timeEl = document.getElementById(`res-time-${id}`);
+      const statusPill = document.getElementById(`status-pill-${id}`);
+
+      bodyEl.textContent = "// Sending request...";
+
+      try {
+        const result = await executeRequest(ep);
+        testedEndpoints.add(ep.id);
+        testedCountEl.textContent = testedEndpoints.size;
+
+        metaEl.style.display = "flex";
+        badgeEl.textContent = `${result.status} ${result.statusText}`;
+        badgeEl.className = `res-badge code-${Math.floor(result.status / 100)}xx`;
+        timeEl.textContent = `${result.latency}ms`;
+
+        // Update card header status pill
+        statusPill.textContent = `${result.status} (${result.latency}ms)`;
+        statusPill.className = `last-status ${result.status < 400 ? "success" : "error"}`;
+
+        if (typeof result.data === "object") {
+          bodyEl.innerHTML = syntaxHighlightJson(result.data);
+        } else {
+          bodyEl.textContent = result.data;
+        }
+
+        // Special handling: if login endpoint succeeded, grab the token automatically!
+        if (ep.path === "/api/login" && result.status === 200 && result.data && result.data.token) {
+          currentAuthToken = result.data.token;
+          localStorage.setItem("mart_pos_token", currentAuthToken);
+          updateAuthUI(result.data.user);
+          showToast("Login successful! Token saved automatically.");
+        }
+      } catch (err) {
+        metaEl.style.display = "flex";
+        badgeEl.textContent = "Error";
+        badgeEl.className = "res-badge code-5xx";
+        timeEl.textContent = "-";
+        bodyEl.textContent = "// Request Failed:\n" + err.message;
+
+        statusPill.textContent = "Failed";
+        statusPill.className = "last-status error";
+      }
+    }
+
+    function formatJsonEditor(id) {
+      const textarea = document.getElementById(`body-${id}`);
+      try {
+        const parsed = JSON.parse(textarea.value);
+        textarea.value = JSON.stringify(parsed, null, 2);
+      } catch (e) {
+        showToast("Cannot format: Invalid JSON syntax");
+      }
+    }
+
+    function copyResponse(id) {
+      const bodyEl = document.getElementById(`res-body-${id}`);
+      navigator.clipboard.writeText(bodyEl.innerText).then(() => {
+        showToast("Response copied to clipboard!");
+      });
+    }
+
+    function copyAsCurl(id) {
+      const ep = API_ENDPOINTS.find(e => e.id === id);
+      if (!ep) return;
+
+      let curl = `curl -X ${ep.method} "http://localhost:3000${ep.path}"`;
+      if (currentAuthToken) {
+        curl += ` \\\n  -H "Authorization: Bearer ${currentAuthToken}"`;
+      }
+      if (["POST", "PUT", "PATCH"].includes(ep.method)) {
+        curl += ` \\\n  -H "Content-Type: application/json"`;
+        const bodyEl = document.getElementById(`body-${ep.id}`);
+        const bodyStr = bodyEl ? bodyEl.value.trim() : JSON.stringify(ep.defaultBody || {});
+        curl += ` \\\n  -d '${bodyStr}'`;
+      }
+
+      navigator.clipboard.writeText(curl).then(() => {
+        showToast("cURL command copied to clipboard!");
+      });
+    }
+
+    // Batch Test All Modal
+    function openTestAllModal() {
+      document.getElementById("testAllModal").classList.add("open");
+    }
+
+    function closeTestAllModal() {
+      document.getElementById("testAllModal").classList.remove("open");
+    }
+
+    async function startBatchHealthCheck() {
+      const startBtn = document.getElementById("btnStartBatchTest");
+      const progressBar = document.getElementById("runnerProgress");
+      const statusText = document.getElementById("runnerStatus");
+      const passedEl = document.getElementById("runnerPassed");
+      const failedEl = document.getElementById("runnerFailed");
+      const tbody = document.getElementById("runnerResultsBody");
+
+      startBtn.disabled = true;
+      startBtn.textContent = "Testing...";
+      tbody.innerHTML = "";
+
+      const safeEndpoints = API_ENDPOINTS.filter(ep => ep.isSafeRead);
+      let passed = 0;
+      let failed = 0;
+      document.getElementById("runnerTotal").textContent = safeEndpoints.length;
+
+      for (let i = 0; i < safeEndpoints.length; i++) {
+        const ep = safeEndpoints[i];
+        statusText.textContent = `Testing ${ep.path}...`;
+        progressBar.style.width = `${Math.round(((i) / safeEndpoints.length) * 100)}%`;
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><span class="method-badge badge-${ep.method}">${ep.method}</span></td>
+          <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;">${ep.path}</td>
+          <td><span style="color: var(--text-muted);">Running...</span></td>
+          <td>-</td>
+          <td>⏳</td>
+        `;
+        tbody.appendChild(row);
+
+        try {
+          const res = await executeRequest(ep);
+          testedEndpoints.add(ep.id);
+          testedCountEl.textContent = testedEndpoints.size;
+
+          const isSuccess = res.status >= 200 && res.status < 400;
+          if (isSuccess) passed++; else failed++;
+
+          row.children[2].innerHTML = `<span class="res-badge code-${Math.floor(res.status / 100)}xx">${res.status} ${res.statusText}</span>`;
+          row.children[3].textContent = `${res.latency}ms`;
+          row.children[4].innerHTML = isSuccess ? `<span style="color: #34d399;">✔ PASS</span>` : `<span style="color: #fb7185;">✖ FAIL</span>`;
+
+          // Update main UI card pill too
+          const pill = document.getElementById(`status-pill-${ep.id}`);
+          if (pill) {
+            pill.textContent = `${res.status} (${res.latency}ms)`;
+            pill.className = `last-status ${isSuccess ? "success" : "error"}`;
+          }
+        } catch (err) {
+          failed++;
+          row.children[2].innerHTML = `<span class="res-badge code-5xx">ERR</span>`;
+          row.children[3].textContent = "-";
+          row.children[4].innerHTML = `<span style="color: #fb7185;">✖ ${err.message}</span>`;
+        }
+
+        passedEl.textContent = passed;
+        failedEl.textContent = failed;
+      }
+
+      progressBar.style.width = "100%";
+      statusText.textContent = "Check Complete!";
+      startBtn.disabled = false;
+      startBtn.innerHTML = `<span>▶</span> Re-run Health Check`;
+      showToast(`Batch test completed: ${passed} passed, ${failed} failed.`);
+    }
+
+    // Auth Modal Functions
+    function openAuthModal() {
+      document.getElementById("manualTokenInput").value = currentAuthToken;
+      document.getElementById("authModal").classList.add("open");
+    }
+
+    function closeAuthModal() {
+      document.getElementById("authModal").classList.remove("open");
+    }
+
+    function saveManualToken() {
+      currentAuthToken = document.getElementById("manualTokenInput").value.trim();
+      localStorage.setItem("mart_pos_token", currentAuthToken);
+      updateAuthUI();
+      closeAuthModal();
+      showToast("Token saved successfully.");
+    }
+
+    function clearToken() {
+      currentAuthToken = "";
+      localStorage.removeItem("mart_pos_token");
+      document.getElementById("manualTokenInput").value = "";
+      updateAuthUI();
+      showToast("Authentication token cleared.");
+    }
+
+    async function quickLogin(username, password) {
+      try {
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.token) {
+          currentAuthToken = data.token;
+          localStorage.setItem("mart_pos_token", currentAuthToken);
+          document.getElementById("manualTokenInput").value = currentAuthToken;
+          updateAuthUI(data.user);
+          showToast(`Logged in as ${username}! Token active.`);
+        } else {
+          showToast(data.message || "Login failed", true);
+        }
+      } catch (e) {
+        showToast("Login error: " + e.message, true);
+      }
+    }
+
+    function updateAuthUI(user) {
+      if (currentAuthToken) {
+        authStatusText.textContent = user ? `Logged in: ${user.username}` : "Token Active ✔";
+        authStatusText.style.color = "#34d399";
+        const userInfo = document.getElementById("authUserInfo");
+        if (userInfo && user) {
+          userInfo.style.display = "block";
+          userInfo.innerHTML = `Logged in as <strong>${user.fullName || user.username}</strong> (${user.role || "User"})`;
+        }
+      } else {
+        authStatusText.textContent = "Set Auth Token";
+        authStatusText.style.color = "inherit";
+        const userInfo = document.getElementById("authUserInfo");
+        if (userInfo) userInfo.style.display = "none";
+      }
+    }
+
+    // Helpers
+    function getCategoryIcon(category) {
+      const icons = {
+        "Auth & Users": "🔐",
+        "Inventory & Products": "📦",
+        "Product Categories": "🏷️",
+        "POS Checkout": "🛒",
+        "Sales & Receipts": "🧾",
+        "Bakong KHQR Payments": "🇰🇭",
+        "Promotions": "🎁",
+        "Staff & Employees": "👥",
+        "Analytics & Dashboard": "📊",
+        "File Uploads": "📁"
+      };
+      return icons[category] || "⚡";
+    }
+
+    function slugify(text) {
+      return text.toLowerCase().replace(/[^\w]/g, "-");
+    }
+
+    function syntaxHighlightJson(json) {
+      if (typeof json !== 'string') {
+        json = JSON.stringify(json, null, 2);
+      }
+      json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        let cls = 'json-number';
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = 'json-key';
+          } else {
+            cls = 'json-string';
+          }
+        } else if (/true|false/.test(match)) {
+          cls = 'json-boolean';
+        } else if (/null/.test(match)) {
+          cls = 'json-null';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+      });
+    }
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById("toastNotification");
+      const icon = document.getElementById("toastIcon");
+      const msg = document.getElementById("toastMessage");
+
+      icon.textContent = isError ? "✕" : "✔";
+      icon.style.color = isError ? "#fb7185" : "#34d399";
+      msg.textContent = message;
+
+      toast.classList.add("show");
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
