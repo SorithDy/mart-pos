@@ -37,23 +37,15 @@ app.use(
 );
 app.use(express.json());
 
-// Interactive API Gateway & Documentation Portal for browsers, with JSON fallback for clients
+// Clean Backend API Directory for browsers, with JSON fallback for programmatic clients
 const dashboardHtmlPath = path.join(__dirname, "views", "api-dashboard.html");
 const postmanFilePath = path.join(__dirname, "..", "..", "postman", "Mart-POS.postman_collection.json");
-
-// Option 1: Automatically disable interactive API Explorer on production to guarantee clean deploys & zero errors.
-// In development (localhost), it is enabled by default. Can be overridden via ENABLE_API_DOCS (true/false).
-const isProduction = String(process.env.NODE_ENV || "").trim().toLowerCase() === "production";
-const isDocsEnabled = process.env.ENABLE_API_DOCS !== undefined
-  ? String(process.env.ENABLE_API_DOCS).trim().toLowerCase() === "true"
-  : !isProduction;
 
 app.get(["/", "/docs", "/api-docs"], (req, res) => {
   const wantsJson = req.query.format === "json" ||
     (req.headers.accept && req.headers.accept.includes("application/json") && !req.headers.accept.includes("text/html"));
 
-  // In production (or when docs are disabled) or when requested as JSON, return standard minimal status (200 OK)
-  if (!isDocsEnabled || wantsJson) {
+  if (wantsJson) {
     return res.status(200).json({
       name: "Mart POS Backend",
       status: "ok",
@@ -73,7 +65,7 @@ app.get(["/", "/docs", "/api-docs"], (req, res) => {
 });
 
 app.get("/api/docs/postman", (req, res) => {
-  if (isDocsEnabled && fs.existsSync(postmanFilePath)) {
+  if (fs.existsSync(postmanFilePath)) {
     return res.download(postmanFilePath, "Mart-POS.postman_collection.json");
   }
   res.status(404).json({ message: "Not found" });
