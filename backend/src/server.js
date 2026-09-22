@@ -41,16 +41,23 @@ app.use(express.json());
 const dashboardHtmlPath = path.join(__dirname, "views", "api-dashboard.html");
 const postmanFilePath = path.join(__dirname, "..", "..", "postman", "Mart-POS.postman_collection.json");
 
+// Security Guard: Disable the interactive API Explorer on production by default.
+// In development, it is enabled by default. Can be overridden via ENABLE_API_DOCS (true/false).
+const isProduction = String(process.env.NODE_ENV || "").trim().toLowerCase() === "production";
+const isDocsEnabled = process.env.ENABLE_API_DOCS !== undefined
+  ? String(process.env.ENABLE_API_DOCS).trim().toLowerCase() === "true"
+  : !isProduction;
+
 app.get(["/", "/docs", "/api-docs"], (req, res) => {
   const wantsJson = req.query.format === "json" ||
     (req.headers.accept && req.headers.accept.includes("application/json") && !req.headers.accept.includes("text/html"));
 
-  if (wantsJson) {
+  // In production (or if docs are disabled) or when requested as JSON, return standard minimal status
+  if (!isDocsEnabled || wantsJson) {
     return res.json({
       name: "Mart POS Backend",
       status: "ok",
-      api: "/api",
-      docs: "/docs"
+      api: "/api"
     });
   }
 
@@ -66,10 +73,10 @@ app.get(["/", "/docs", "/api-docs"], (req, res) => {
 });
 
 app.get("/api/docs/postman", (req, res) => {
-  if (fs.existsSync(postmanFilePath)) {
+  if (isDocsEnabled && fs.existsSync(postmanFilePath)) {
     return res.download(postmanFilePath, "Mart-POS.postman_collection.json");
   }
-  res.status(404).json({ message: "Postman collection not found" });
+  res.status(404).json({ message: "Not found" });
 });
 
 app.get("/health", (req, res) => {
