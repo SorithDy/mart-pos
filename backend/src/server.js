@@ -37,102 +37,50 @@ app.use(
 );
 app.use(express.json());
 
-// Interactive API Gateway & Documentation Portal for browsers, protected with HTTP Basic Auth
+// Interactive API Gateway & Documentation Portal for browsers, with JSON fallback for clients
 const dashboardHtmlPath = path.join(__dirname, "views", "api-dashboard.html");
 const postmanFilePath = path.join(__dirname, "..", "..", "postman", "Mart-POS.postman_collection.json");
 
-const docsUser = process.env.DOCS_USER || "admin";
-const docsPassword = process.env.DOCS_PASSWORD || "admin123";
-// Option 2: Require authentication on production by default, or whenever DOCS_AUTH_REQUIRED is true.
+// Option 1: Automatically disable interactive API Explorer on production to guarantee clean deploys & zero errors.
+// In development (localhost), it is enabled by default. Can be overridden via ENABLE_API_DOCS (true/false).
 const isProduction = String(process.env.NODE_ENV || "").trim().toLowerCase() === "production";
-const isDocsAuthRequired = process.env.DOCS_AUTH_REQUIRED !== undefined
-  ? String(process.env.DOCS_AUTH_REQUIRED).trim().toLowerCase() === "true"
-  : isProduction;
+const isDocsEnabled = process.env.ENABLE_API_DOCS !== undefined
+  ? String(process.env.ENABLE_API_DOCS).trim().toLowerCase() === "true"
+  : !isProduction;
 
-function requireDocsAuth(req, res, next) {
+app.get(["/", "/docs", "/api-docs"], (req, res) => {
   const wantsJson = req.query.format === "json" ||
     (req.headers.accept && req.headers.accept.includes("application/json") && !req.headers.accept.includes("text/html"));
 
-  // Programmatic API checks (e.g. curl or monitoring) receive safe JSON without challenging Basic Auth
-  if (wantsJson) {
-    return res.json({
+  // In production (or when docs are disabled) or when requested as JSON, return standard minimal status (200 OK)
+  if (!isDocsEnabled || wantsJson) {
+    return res.status(200).json({
       name: "Mart POS Backend",
       status: "ok",
       api: "/api"
     });
   }
 
-  // When authentication is required, challenge the browser with HTTP Basic Auth
-  if (isDocsAuthRequired) {
-    const authHeader = req.headers.authorization || "";
-    if (!authHeader.startsWith("Basic ")) {
-      res.setHeader("WWW-Authenticate", 'Basic realm="Mart POS API Explorer"');
-      return res.status(401).send(`
-        <!DOCTYPE html>
-        <html>
-        <head><title>401 Unauthorized</title><style>body{background:#090d16;color:#f8fafc;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}div{text-align:center;padding:2rem;background:#0f172a;border-radius:12px;border:1px solid #1e293b;}</style></head>
-        <body>
-          <div>
-            <h2>🔒 Authentication Required</h2>
-            <p style="color:#94a3b8;margin-top:0.5rem;">Please log in with your Admin credentials to access the API Explorer.</p>
-          </div>
-        </body>
-        </html>
-      `);
-    }
-
-    try {
-      const b64 = authHeader.slice(6).trim();
-      const decoded = Buffer.from(b64, "base64").toString("utf8");
-      const colonIdx = decoded.indexOf(":");
-      const username = colonIdx !== -1 ? decoded.slice(0, colonIdx) : decoded;
-      const password = colonIdx !== -1 ? decoded.slice(colonIdx + 1) : "";
-
-      if (username !== docsUser || password !== docsPassword) {
-        res.setHeader("WWW-Authenticate", 'Basic realm="Mart POS API Explorer"');
-        return res.status(401).send(`
-          <!DOCTYPE html>
-          <html>
-          <head><title>401 Unauthorized</title><style>body{background:#090d16;color:#f8fafc;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}div{text-align:center;padding:2rem;background:#0f172a;border-radius:12px;border:1px solid #1e293b;}</style></head>
-          <body>
-            <div>
-              <h2 style="color:#fb7185;">⛔ Invalid Credentials</h2>
-              <p style="color:#94a3b8;margin-top:0.5rem;">The username or password you entered is incorrect.</p>
-            </div>
-          </body>
-          </html>
-        `);
-      }
-    } catch (_) {
-      res.setHeader("WWW-Authenticate", 'Basic realm="Mart POS API Explorer"');
-      return res.status(401).send("Authentication error.");
-    }
-  }
-
-  next();
-}
-
-app.get(["/", "/docs", "/api-docs"], requireDocsAuth, (req, res) => {
   if (fs.existsSync(dashboardHtmlPath)) {
     return res.sendFile(dashboardHtmlPath);
   }
 
-  res.json({
+  res.status(200).json({
     name: "Mart POS Backend",
     status: "ok",
     api: "/api"
   });
 });
 
-app.get("/api/docs/postman", requireDocsAuth, (req, res) => {
-  if (fs.existsSync(postmanFilePath)) {
+app.get("/api/docs/postman", (req, res) => {
+  if (isDocsEnabled && fs.existsSync(postmanFilePath)) {
     return res.download(postmanFilePath, "Mart-POS.postman_collection.json");
   }
   res.status(404).json({ message: "Not found" });
 });
 
 app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
+  res.status(200).json({ status: "ok" });
 });
 
 // Use reliable DNS resolvers for MongoDB Atlas SRV records. Override with
