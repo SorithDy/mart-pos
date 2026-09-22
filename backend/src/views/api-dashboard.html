@@ -309,10 +309,7 @@
 
     <!-- Action Buttons -->
     <div class="actions-row">
-      <a href="http://localhost:5173" target="_blank" class="action-btn primary" title="Open POS Application">
-        <span>🌐</span> Open Website (Live Site) ↗
-      </a>
-      <a href="http://localhost:5173/Dashboard-page.html" target="_blank" class="action-btn secondary" title="Open POS Dashboard">
+      <a id="dashboardBtn" href="http://localhost:5173/Dashboard-page.html" target="_blank" class="action-btn primary" title="Open Admin Dashboard">
         <span>⚙</span> Admin Dashboard ↗
       </a>
       <a href="/health" target="_blank" class="action-btn secondary" title="View Health Status JSON">
@@ -526,6 +523,16 @@
       .catch(() => {
         document.getElementById('statusText').textContent = 'Connecting...';
       });
+
+    // Automatically resolve hosted frontend URL when not on localhost
+    const dashboardBtn = document.getElementById('dashboardBtn');
+    if (dashboardBtn) {
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (!isLocal) {
+        const cloudFrontend = window.location.origin.replace('-backend.onrender.com', '-frontend.onrender.com');
+        dashboardBtn.href = `${cloudFrontend}/Dashboard-page.html`;
+      }
+    }
   </script>
 </body>
 </html>

@@ -54,6 +54,13 @@ app.get(["/", "/docs", "/api-docs"], (req, res) => {
   }
 
   if (fs.existsSync(dashboardHtmlPath)) {
+    const frontendUrl = String(process.env.FRONTEND_URL || (corsOrigins.length ? corsOrigins[0] : "")).trim().replace(/\/+$/, "");
+    if (frontendUrl && !frontendUrl.includes("localhost")) {
+      const html = fs.readFileSync(dashboardHtmlPath, "utf8")
+        .replace(/http:\/\/localhost:5173\/Dashboard-page\.html/g, `${frontendUrl}/Dashboard-page.html`)
+        .replace(/http:\/\/localhost:5173/g, frontendUrl);
+      return res.type("html").send(html);
+    }
     return res.sendFile(dashboardHtmlPath);
   }
 
